@@ -1,26 +1,149 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Dark is the default mode (DESIGN.md §2). The inline script in app/layout.tsx
+   stamps data-theme on <html> before paint, so this variant is always resolved. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------------------------------------------------------------------------
+   Raw palette — DESIGN.md §2. Literal hexes live here and nowhere else.
+   Components must reference the semantic layer below, not these.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-blueprint-navy: #0b1420;
+  --color-schematic-ink: #101b2d;
+  --color-signal-red: #d62828;
+  --color-ember-maroon: #5c1416;
+  --color-ember-maroon-light: #8c1f1f;
+  --color-breaker-gold: #f2c94c; /* 11.66 on blueprint-navy — AA at any size */
+  /* §2 gives #C9971F as the light-mode gold "darkened for AA contrast on white".
+     Measured, it is 2.43 on porcelain — below even the 3.0 large-text floor, and
+     gold carries 13px mono text (batch tags, card tags, event date). Darkened to
+     4.55 on porcelain / 4.96 on panel-white, which clears AA body at every size.
+     Dark-mode gold is untouched. Agreed before changing. */
+  --color-breaker-gold-dark: #8f6a10;
+  --color-fog-white: #f4f2ed;
+  --color-steel-40: #8b93a1;
+  --color-porcelain: #f7f5f0;
+  --color-panel-white: #ffffff;
+  --color-graphite: #161a20;
+  --color-steel-60: #5b6472;
+
+  /* Type scale §3 — 13/15/17/22/30/44/68, ratio ~1.32.
+     Defaults cleared so an off-scale size cannot be written by accident. */
+  --text-*: initial;
+  --text-meta: 0.8125rem; /* 13 */
+  --text-meta--line-height: 1.4;
+  --text-sm: 0.9375rem; /* 15 */
+  --text-sm--line-height: 1.5;
+  --text-base: 1.0625rem; /* 17 */
+  --text-base--line-height: 1.6;
+  --text-lg: 1.375rem; /* 22 */
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.875rem; /* 30 */
+  --text-xl--line-height: 1.25;
+  --text-2xl: 2.75rem; /* 44 */
+  --text-2xl--line-height: 1.1;
+  --text-2xl--letter-spacing: -0.015em;
+  --text-3xl: 4.25rem; /* 68 — hero, desktop */
+  --text-3xl--line-height: 1.05;
+  --text-3xl--letter-spacing: -0.015em;
+  /* §3 names 36px for the mobile hero explicitly; it sits off the ladder above,
+     so it is tokenised here rather than inlined in Hero.tsx. */
+  --text-hero-sm: 2.25rem; /* 36 */
+  --text-hero-sm--line-height: 1.1;
+  --text-hero-sm--letter-spacing: -0.015em;
+
+  /* Spacing §4 — permitted steps are 4/8/12/20/32/48/80/128px, which map onto
+     the 0.25rem base as 1/2/3/5/8/12/20/32. Stay on those steps. */
+  --spacing: 0.25rem;
+
+  /* Radii §7 — 6px buttons, 8px cards. Defaults cleared because §7 reserves
+     full roundness "for nothing in this system"; rounded-full is intentionally gone. */
+  --radius-*: initial;
+  --radius-button: 6px;
+  --radius-card: 8px;
+
+  /* Breakpoints §4 — 375 is the supported floor (base styles), not a min-width. */
+  --breakpoint-*: initial;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1280px;
+  --breakpoint-wide: 1600px;
+
+  --container-content: 1280px; /* §4 max content width */
+
+  --font-display: var(--font-neue-montreal), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-general-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-reckless), ui-serif, serif;
+
+  /* §3 lists Display 500/650. The supplied Neue Montreal files are static with
+     no 650 — strong resolves to Bold 700, the nearest available step. */
+  --font-weight-display: 500;
+  --font-weight-display-strong: 700;
+
+  --ease-signal: cubic-bezier(0.16, 1, 0.3, 1); /* §5 */
+}
+
+/* ---------------------------------------------------------------------------
+   Semantic layer — the only colors components should name.
+   signal-red is the one token identical in both modes (§2 "mode logic").
+   --------------------------------------------------------------------------- */
+:root,
+[data-theme="light"] {
+  --bg: var(--color-porcelain);
+  --surface: var(--color-panel-white);
+  --text: var(--color-graphite);
+  --text-body: var(--color-graphite);
+  --text-muted: var(--color-steel-60);
+  --accent: var(--color-signal-red);
+  --accent-deep: var(--color-ember-maroon-light);
+  --highlight: var(--color-breaker-gold-dark);
+  --border: color-mix(in srgb, var(--color-steel-60) 20%, transparent);
+}
+
+[data-theme="dark"] {
+  --bg: var(--color-blueprint-navy);
+  --surface: var(--color-schematic-ink);
+  --text: var(--color-fog-white);
+  /* §2: body copy sits at 92% opacity on dark */
+  --text-body: color-mix(in srgb, var(--color-fog-white) 92%, transparent);
+  --text-muted: var(--color-steel-40);
+  --accent: var(--color-signal-red);
+  --accent-deep: var(--color-ember-maroon);
+  --highlight: var(--color-breaker-gold);
+  --border: color-mix(in srgb, var(--color-steel-40) 20%, transparent);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-body: var(--text-body);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-highlight: var(--highlight);
+  --color-border: var(--border);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--text-body);
+    font-family: var(--font-sans);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 150ms !important;
+    }
+  }
 }
