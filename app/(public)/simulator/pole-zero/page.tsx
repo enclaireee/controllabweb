@@ -47,7 +47,7 @@ export default function PoleZeroSimulator() {
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
-        <h1 className="text-2xl font-bold">Control System Simulator</h1>
+        <h1 className="text-2xl font-bold">Poles and Zeros Simulator</h1>
         <div className="text-xl p-4 bg-slate-50 border rounded-lg inline-block" dangerouslySetInnerHTML={{ __html: katex.renderToString(data.tf_latex, { throwOnError: false }) }} />
 
         <div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
