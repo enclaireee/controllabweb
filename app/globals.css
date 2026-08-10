@@ -1,12 +1,19 @@
 @import "tailwindcss";
 
-/* Dark is the default mode (DESIGN.md §2). The inline script in app/layout.tsx
-   stamps data-theme on <html> before paint, so this variant is always resolved. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+/* Dark is the default mode (design.md §2) and needs no script: :root carries the
+   dark values and [data-theme="light"] overrides. The previous comment here
+   described an inline script in app/layout.tsx that was never written, which left
+   [data-theme] unset and this variant permanently unresolved — dark mode was dead
+   code. Both variants below are escape hatches; the semantic layer is the real
+   mechanism and flips on its own. */
+@custom-variant dark (&:where(:root:not([data-theme="light"]),
+                              :root:not([data-theme="light"]) *));
+@custom-variant light (&:where([data-theme="light"], [data-theme="light"] *));
 
 /* ---------------------------------------------------------------------------
-   Raw palette — DESIGN.md §2. Literal hexes live here and nowhere else.
+   Raw palette — design.md §2. Literal hexes live here and nowhere else.
    Components must reference the semantic layer below, not these.
+   Ratios in comments are measured, not estimated.
    --------------------------------------------------------------------------- */
 @theme {
   --color-blueprint-navy: #0b1420;
@@ -27,6 +34,16 @@
   --color-panel-white: #ffffff;
   --color-graphite: #161a20;
   --color-steel-60: #5b6472;
+
+  /* Elevation step 3, dark. 1.16 vs schematic-ink: deliberately subtle, and
+     paired with a 1px top highlight rather than a shadow — a shadow on #0b1420
+     is measurably invisible, so lightness does the separating instead. */
+  --color-blueprint-raised: #1a2740;
+  /* signal-red is 3.69 on navy: legal at >=24px, illegal for body text. This is
+     the text-safe sibling — 5.42 on navy, 5.06 on schematic-ink. */
+  --color-signal-red-light: #e85d5d;
+  --color-continuity-green: #3ecf8e; /* 9.27 on navy */
+  --color-continuity-green-dark: #0f7b52; /* 4.85 on porcelain */
 
   /* Type scale §3 — 13/15/17/22/30/44/68, ratio ~1.32.
      Defaults cleared so an off-scale size cannot be written by accident. */
@@ -54,75 +71,146 @@
   --text-hero-sm--letter-spacing: -0.015em;
 
   /* Spacing §4 — permitted steps are 4/8/12/20/32/48/80/128px, which map onto
-     the 0.25rem base as 1/2/3/5/8/12/20/32. Stay on those steps. */
+     the 0.25rem base as 1/2/3/5/8/12/20/32. Stay on those steps.
+     §4 "airy chrome, dense data": 20/32 inside data rows, 48/80/128 between
+     sections and around reading surfaces. */
   --spacing: 0.25rem;
 
-  /* Radii §7 — 6px buttons, 8px cards. Defaults cleared because §7 reserves
-     full roundness "for nothing in this system"; rounded-full is intentionally gone. */
+  /* Radii §7 — 6px buttons, 8px cards, 4px tags. Defaults cleared because §7
+     reserves full roundness "for nothing in this system"; rounded-full is gone. */
   --radius-*: initial;
   --radius-button: 6px;
   --radius-card: 8px;
+  --radius-tag: 4px; /* a 20px status pill at 6px reads as a small button */
 
-  /* Breakpoints §4 — 375 is the supported floor (base styles), not a min-width. */
+  /* Breakpoints §4 — 375 is the supported floor (base styles), not a min-width.
+     768 is also the grading floor: below it the roster is read-only (design.md §9). */
   --breakpoint-*: initial;
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1280px;
   --breakpoint-wide: 1600px;
 
-  --container-content: 1280px; /* §4 max content width */
+  --container-content: 1280px; /* §4 max content width — tables, grids */
+  --container-prose: 720px; /* §4 reading measure — module text, instructions */
 
   --font-display: var(--font-neue-montreal), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-general-sans), ui-sans-serif, system-ui, sans-serif;
+  /* UNUSED — Reckless has no role in this system (design.md §3). Trial-licensed;
+     must not ship. Left wired so it is available if an editorial moment is ever
+     approved, but nothing may reference it until design.md says so. */
   --font-serif: var(--font-reckless), ui-serif, serif;
+  /* §3 data face — scores, NIM, timestamps, deadlines. System stack, 0 bytes. */
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   /* §3 lists Display 500/650. The supplied Neue Montreal files are static with
      no 650 — strong resolves to Bold 700, the nearest available step. */
   --font-weight-display: 500;
   --font-weight-display-strong: 700;
 
-  --ease-signal: cubic-bezier(0.16, 1, 0.3, 1); /* §5 */
+  /* §5 — entrances decelerate, exits accelerate. A single symmetric curve is the
+     tell of a system that never thought about it. */
+  --ease-signal: cubic-bezier(0.16, 1, 0.3, 1); /* entrance / settle */
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15); /* exit / dismiss */
+
+  /* §5 — motion level 2. Both sit inside the band measured off Linear (100–175ms).
+     Utility form is duration-120 / duration-180; these exist for use in raw CSS. */
+  --duration-fast: 120ms; /* hover, press, focus */
+  --duration-base: 180ms; /* enter, exit, state change */
+
+  /* §4 stacking ladder — nothing is layered by guesswork.
+     Not a Tailwind namespace; use as z-[var(--z-header)]. */
+  --z-base: 0;
+  --z-rail: 10;
+  --z-header: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
 }
 
 /* ---------------------------------------------------------------------------
    Semantic layer — the only colors components should name.
-   signal-red is the one token identical in both modes (§2 "mode logic").
+   DARK IS :root (design.md §2, dark-first). Light is the override.
+   signal-red is the one hue identical in both modes.
    --------------------------------------------------------------------------- */
 :root,
-[data-theme="light"] {
-  --bg: var(--color-porcelain);
-  --surface: var(--color-panel-white);
-  --text: var(--color-graphite);
-  --text-body: var(--color-graphite);
-  --text-muted: var(--color-steel-60);
-  --accent: var(--color-signal-red);
-  --accent-deep: var(--color-ember-maroon-light);
-  --highlight: var(--color-breaker-gold-dark);
-  --border: color-mix(in srgb, var(--color-steel-60) 20%, transparent);
-}
-
 [data-theme="dark"] {
   --bg: var(--color-blueprint-navy);
   --surface: var(--color-schematic-ink);
-  --text: var(--color-fog-white);
+  --surface-raised: var(--color-blueprint-raised);
+  /* elevation without shadow — a 1px top highlight reads as a lit edge */
+  --edge-highlight: color-mix(in srgb, var(--color-fog-white) 8%, transparent);
+  --elevation: none; /* measured invisible on navy; lightness does the work */
+  --text: var(--color-fog-white); /* 16.54 */
   /* §2: body copy sits at 92% opacity on dark */
-  --text-body: color-mix(in srgb, var(--color-fog-white) 92%, transparent);
-  --text-muted: var(--color-steel-40);
-  --accent: var(--color-signal-red);
-  --accent-deep: var(--color-ember-maroon);
-  --highlight: var(--color-breaker-gold);
+  --text-body: color-mix(in srgb, var(--color-fog-white) 92%, transparent); /* 14.01 */
+  --text-muted: var(--color-steel-40); /* 5.98 */
+  --accent: var(--color-signal-red); /* 3.69 — fills, >=24px text, focus rings */
+  /* §7 button states. Mixing 86%/74% toward navy reproduces the documented
+     #ba2527 / #a31f21 exactly, without a hex living in a component. */
+  --accent-hover: color-mix(in srgb, var(--color-signal-red) 86%, var(--color-blueprint-navy));
+  --accent-active: color-mix(in srgb, var(--color-signal-red) 74%, var(--color-blueprint-navy));
+  /* §7 — the label on an --accent fill. fog-white measures 4.48 and FAILS AA;
+     pure white is 5.01. Named so the failing choice cannot be made by accident. */
+  --on-accent: var(--color-panel-white);
+  --accent-text: var(--color-signal-red-light); /* 5.42 — accent at body size */
+  --accent-deep: var(--color-ember-maroon); /* 1.38 — FILL ONLY, never text */
+  --highlight: var(--color-breaker-gold); /* 11.66 */
+  --success: var(--color-continuity-green); /* 9.27 */
+  --warning: var(--color-breaker-gold); /* 11.66 */
+  --danger: var(--color-signal-red-light); /* 5.42 */
+  /* decorative separator — 1.36 on surface, deliberately below the 3.0 floor
+     because it carries no meaning (WCAG 1.4.11 exempts purely decorative edges) */
   --border: color-mix(in srgb, var(--color-steel-40) 20%, transparent);
+  /* interactive boundary — inputs, selects, checkboxes. 1.4.11 requires 3.0:
+     3.40 on surface, 3.65 on bg. Never use --border for a form control. */
+  --border-strong: color-mix(in srgb, var(--color-steel-40) 70%, transparent);
+}
+
+[data-theme="light"] {
+  --bg: var(--color-porcelain);
+  --surface: var(--color-panel-white);
+  --surface-raised: var(--color-panel-white);
+  --edge-highlight: transparent;
+  --elevation: 0 16px 32px rgb(11 20 32 / 0.1); /* §6 — light mode only */
+  --text: var(--color-graphite); /* 16.03 */
+  --text-body: var(--color-graphite);
+  --text-muted: var(--color-steel-60); /* 5.49 */
+  --accent: var(--color-signal-red); /* 4.60 — passes body size on light */
+  --accent-hover: color-mix(in srgb, var(--color-signal-red) 88%, var(--color-graphite));
+  --accent-active: color-mix(in srgb, var(--color-signal-red) 78%, var(--color-graphite));
+  --on-accent: var(--color-panel-white); /* 5.01 on signal-red */
+  --accent-text: var(--color-signal-red); /* 4.60 */
+  --accent-deep: var(--color-ember-maroon-light); /* 8.27 */
+  --highlight: var(--color-breaker-gold-dark); /* 4.55 */
+  --success: var(--color-continuity-green-dark); /* 4.85 */
+  --warning: var(--color-breaker-gold-dark); /* 4.55 */
+  --danger: var(--color-signal-red); /* 4.60 */
+  --border: color-mix(in srgb, var(--color-steel-60) 20%, transparent);
+  /* 5.98 on panel-white, 5.49 on porcelain. 60% only reaches 2.57 — measured. */
+  --border-strong: var(--color-steel-60);
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-edge-highlight: var(--edge-highlight);
   --color-text: var(--text);
   --color-text-body: var(--text-body);
   --color-text-muted: var(--text-muted);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-on-accent: var(--on-accent);
+  --color-accent-text: var(--accent-text);
   --color-accent-deep: var(--accent-deep);
   --color-highlight: var(--highlight);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --shadow-card: var(--elevation);
 }
 
 @layer base {
@@ -130,6 +218,12 @@
     background-color: var(--bg);
     color: var(--text-body);
     font-family: var(--font-sans);
+  }
+
+  /* §3 — scores, NIM and deadlines must align in columns. */
+  .font-mono,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
   }
 
   :focus-visible {
@@ -143,7 +237,9 @@
     *::after {
       animation-duration: 0.001ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 150ms !important;
+      /* §9 — reduced motion means off and instant. This was 150ms, which is
+         still perceptible movement. */
+      transition-duration: 0.01ms !important;
     }
   }
 }

@@ -7,6 +7,47 @@ import 'katex/dist/katex.min.css';
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
+/**
+ * Plotly paints to canvas/SVG and cannot read CSS custom properties, so the
+ * theme has to be handed to it as resolved colour strings. design.md §2 — no
+ * hex literals live in this file.
+ *
+ * Reading the custom property directly is not enough: `--border` is a
+ * color-mix(), and a custom property's computed value keeps that function
+ * unevaluated, so Plotly would receive the literal text "color-mix(...)" and
+ * drop the colour. Assigning it to a real `color` property on a throwaway
+ * element makes the browser evaluate it down to an rgb()/rgba() string.
+ *
+ * ponytail: cached per token, so a future theme toggle must clear `cache`.
+ * There is no toggle today (design.md §2 — dark is the only rendered mode).
+ */
+const cache = new Map<string, string>();
+
+/** Response shape of POST /api/analyze. Mirrors backend/main.py — read only. */
+type Analysis = {
+    tf_latex: string;
+    step: { t: number[]; y: number[] };
+    impulse: { t: number[]; y: number[] };
+    bode: { w: number[]; mag: number[] };
+    surface: { sigma: number[]; omega: number[]; z: number[][] };
+    zeros: { x: number[]; y: number[]; z: number[] };
+};
+
+const token = (name: string): string => {
+    // <Plot> is ssr:false, so the empty server value is never painted.
+    if (typeof window === 'undefined') return '';
+    const hit = cache.get(name);
+    if (hit) return hit;
+    const probe = document.createElement('span');
+    probe.style.color = `var(${name})`;
+    probe.style.display = 'none';
+    document.body.appendChild(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    if (value) cache.set(name, value);
+    return value;
+};
+
 export default function PoleZeroSimulator() {
     const [numPoles, setNumPoles] = useState(2);
     const [numZeros, setNumZeros] = useState(0);
@@ -16,7 +57,8 @@ export default function PoleZeroSimulator() {
     const [zRe, setZRe] = useState([-2.0, -3.0, -1.0]);
     const [zIm, setZIm] = useState([0.0, 0.0]);
 
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<Analysis | null>(null);
+    const [gagal, setGagal] = useState(false);
 
     useEffect(() => {
         const h = setTimeout(() => {
@@ -24,122 +66,244 @@ export default function PoleZeroSimulator() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ num_poles: numPoles, num_zeros: numZeros, p_re: pRe, p_im: pIm, z_re: zRe, z_im: zIm })
-            }).then(r => r.json()).then(setData);
+            })
+                .then(r => r.json())
+                .then(d => { setData(d); setGagal(false); })
+                .catch(() => setGagal(true));
         }, 60);
         return () => clearTimeout(h);
     }, [numPoles, numZeros, pRe, pIm, zRe, zIm]);
 
-    if (!data) return <div className="p-8 font-sans">Loading simulation data...</div>;
+    // design.md §8 — an error says what happened and what to do.
+    if (gagal && !data) return (
+        <div className="mx-auto max-w-prose px-5 py-20">
+            <h1 className="font-display text-lg text-text">Server simulasi tidak merespons</h1>
+            <p className="mt-3 text-sm text-text-muted">
+                Jalankan backend lebih dulu, lalu muat ulang halaman ini.
+            </p>
+            <code className="mt-5 inline-block rounded-button border border-border bg-surface px-3 py-2 font-mono text-meta text-text">
+                uvicorn backend.main:app --reload --port 8000
+            </code>
+        </div>
+    );
 
-    const updateArr = (arr: number[], setArr: Function, idx: number, val: number) => {
+    if (!data) return (
+        <div className="mx-auto max-w-prose px-5 py-20 text-sm text-text-muted">
+            Memuat data simulasi…
+        </div>
+    );
+
+    const updateArr = (
+        arr: number[],
+        setArr: (next: number[]) => void,
+        idx: number,
+        val: number,
+    ) => {
         const next = [...arr];
         next[idx] = val;
         setArr(next);
     };
 
-    const render2D = (x: number[], y: number[], title: string, xL: string, yL: string, color: string, logX = false) => (
-        <Plot
-        data={[{ x, y, type: 'scatter', mode: 'lines', line: { color } }]}
-        layout={{ title, xaxis: { title: { text: xL }, type: logX ? 'log' : 'linear' }, yaxis: { title: { text: yL } }, margin: { l: 50, r: 20, t: 35, b: 40 }, autosize: true }}
-        useResizeHandler className="w-full h-72"
-        />
+    // §5 — the axis furniture is chrome, the trace is the signal.
+    const plotChrome = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: token('--text-muted'), size: 13 },
+        xaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
+        yaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
+    };
+
+    const render2D = (x: number[], y: number[], title: string, xL: string, yL: string, logX = false) => (
+        <div className="rounded-card border border-border bg-surface p-5">
+            <Plot
+                // §2 — one accent. Separate charts with their own titles do not need
+                // different hues to be told apart; that is a novice tell.
+                data={[{ x, y, type: 'scatter', mode: 'lines', line: { color: token('--accent'), width: 2 } }]}
+                layout={{
+                    ...plotChrome,
+                    title: { text: title, font: { color: token('--text'), size: 15 } },
+                    xaxis: { ...plotChrome.xaxis, title: { text: xL }, type: logX ? 'log' : 'linear' },
+                    yaxis: { ...plotChrome.yaxis, title: { text: yL } },
+                    margin: { l: 50, r: 20, t: 35, b: 40 },
+                    autosize: true,
+                }}
+                useResizeHandler className="h-72 w-full"
+            />
+        </div>
     );
 
+    const kartu = 'rounded-card border border-border bg-surface p-5';
+    const kontrol = 'rounded-button border border-border bg-bg p-3 text-meta text-text-body';
+    const slider = 'mt-2 w-full accent-accent';
+    const selectCls = 'h-10 rounded-button border border-border-strong bg-surface px-3 text-sm text-text';
+
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
-        <h1 className="text-2xl font-bold">Poles and Zeros Simulator</h1>
-        <div className="text-xl p-4 bg-slate-50 border rounded-lg inline-block" dangerouslySetInnerHTML={{ __html: katex.renderToString(data.tf_latex, { throwOnError: false }) }} />
+        <div className="mx-auto max-w-content space-y-8 px-5 py-20 tablet:px-8">
+            <h1 className="font-display text-xl font-medium text-text">Poles and Zeros Simulator</h1>
 
-        <div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
-        <label className="flex flex-col text-sm font-semibold">
-        Poles:
-        <select value={numPoles} onChange={e => { const v = +e.target.value; setNumPoles(v); if (numZeros > v) setNumZeros(v); }} className="p-1 border rounded bg-white">
-        {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Pole{n > 1 && 's'}</option>)}
-        </select>
-        </label>
-        <label className="flex flex-col text-sm font-semibold">
-        Zeros:
-        <select value={numZeros} onChange={e => setNumZeros(+e.target.value)} className="p-1 border rounded bg-white">
-        {Array.from({ length: numPoles + 1 }, (_, i) => <option key={i} value={i}>{i} Zero{i !== 1 && 's'}</option>)}
-        </select>
-        </label>
-        </div>
+            <div
+                className={`${kartu} inline-block text-base text-text`}
+                dangerouslySetInnerHTML={{ __html: katex.renderToString(data.tf_latex, { throwOnError: false }) }}
+            />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 border rounded-lg">
-        <div className="space-y-3">
-        <h3 className="font-bold text-sm text-red-700">Poles</h3>
-        {numPoles >= 1 && (
-            <div className="p-2 border rounded bg-white text-xs space-y-1">
-            <span>{numPoles === 1 ? 'Real Pole 1' : 'Pole Pair 1'}</span>
-            <label className="flex flex-col">Real (σ1): {pRe[0]}<input type="range" min="-5" max="2" step="0.1" value={pRe[0]} onChange={e => updateArr(pRe, setPRe, 0, +e.target.value)} /></label>
-            {numPoles >= 2 && <label className="flex flex-col">Imag (±ω1): {pIm[0]}<input type="range" min="0" max="8" step="0.1" value={pIm[0]} onChange={e => updateArr(pIm, setPIm, 0, +e.target.value)} /></label>}
+            <div className={`${kartu} flex flex-wrap gap-8`}>
+                <label className="flex flex-col gap-2 text-meta font-medium text-text-muted">
+                    Poles
+                    <select
+                        value={numPoles}
+                        onChange={e => { const v = +e.target.value; setNumPoles(v); if (numZeros > v) setNumZeros(v); }}
+                        className={selectCls}
+                    >
+                        {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} Pole{n > 1 && 's'}</option>)}
+                    </select>
+                </label>
+                <label className="flex flex-col gap-2 text-meta font-medium text-text-muted">
+                    Zeros
+                    <select value={numZeros} onChange={e => setNumZeros(+e.target.value)} className={selectCls}>
+                        {Array.from({ length: numPoles + 1 }, (_, i) => <option key={i} value={i}>{i} Zero{i !== 1 && 's'}</option>)}
+                    </select>
+                </label>
             </div>
-        )}
-        {numPoles >= 3 && (
-            <div className="p-2 border rounded bg-white text-xs space-y-1">
-            <span>{numPoles === 3 ? 'Real Pole 2' : 'Pole Pair 2'}</span>
-            <label className="flex flex-col">Real (σ2): {pRe[1]}<input type="range" min="-5" max="2" step="0.1" value={pRe[1]} onChange={e => updateArr(pRe, setPRe, 1, +e.target.value)} /></label>
-            {numPoles >= 4 && <label className="flex flex-col">Imag (±ω2): {pIm[1]}<input type="range" min="0" max="8" step="0.1" value={pIm[1]} onChange={e => updateArr(pIm, setPIm, 1, +e.target.value)} /></label>}
-            </div>
-        )}
-        {numPoles === 5 && (
-            <div className="p-2 border rounded bg-white text-xs space-y-1">
-            <span>Real Pole 3</span>
-            <label className="flex flex-col">Real (σ3): {pRe[2]}<input type="range" min="-5" max="2" step="0.1" value={pRe[2]} onChange={e => updateArr(pRe, setPRe, 2, +e.target.value)} /></label>
-            </div>
-        )}
-        </div>
 
-        <div className="space-y-3">
-        <h3 className="font-bold text-sm text-blue-700">Zeros</h3>
-        {numZeros === 0 && <p className="text-xs text-gray-500 italic">No zeros selected.</p>}
-        {numZeros >= 1 && (
-            <div className="p-2 border rounded bg-white text-xs space-y-1">
-            <span>{numZeros === 1 ? 'Real Zero 1' : 'Zero Pair 1'}</span>
-            <label className="flex flex-col">Real (σ_z1): {zRe[0]}<input type="range" min="-6" max="2" step="0.1" value={zRe[0]} onChange={e => updateArr(zRe, setZRe, 0, +e.target.value)} /></label>
-            {numZeros >= 2 && <label className="flex flex-col">Imag (±ω_z1): {zIm[0]}<input type="range" min="0" max="8" step="0.1" value={zIm[0]} onChange={e => updateArr(zIm, setZIm, 0, +e.target.value)} /></label>}
-            </div>
-        )}
-        {numZeros >= 3 && (
-            <div className="p-2 border rounded bg-white text-xs space-y-1">
-            <span>{numZeros === 3 ? 'Real Zero 2' : 'Zero Pair 2'}</span>
-            <label className="flex flex-col">Real (σ_z2): {zRe[1]}<input type="range" min="-6" max="2" step="0.1" value={zRe[1]} onChange={e => updateArr(zRe, setZRe, 1, +e.target.value)} /></label>
-            {numZeros >= 4 && <label className="flex flex-col">Imag (±ω_z2): {zIm[1]}<input type="range" min="0" max="8" step="0.1" value={zIm[1]} onChange={e => updateArr(zIm, setZIm, 1, +e.target.value)} /></label>}
-            </div>
-        )}
-        {numZeros === 5 && (
-            <div className="p-2 border rounded bg-white text-xs space-y-1">
-            <span>Real Zero 3</span>
-            <label className="flex flex-col">Real (σ_z3): {zRe[2]}<input type="range" min="-6" max="2" step="0.1" value={zRe[2]} onChange={e => updateArr(zRe, setZRe, 2, +e.target.value)} /></label>
-            </div>
-        )}
-        </div>
-        </div>
+            {/* tablet:, not md: — --breakpoint-*: initial removed Tailwind's defaults,
+                so md: compiled to nothing and this grid never split into columns. */}
+            <div className="grid grid-cols-1 gap-8 tablet:grid-cols-2">
+                <div className="space-y-3">
+                    <h2 className="font-mono text-meta uppercase tracking-wide text-text-muted">Poles</h2>
+                    {numPoles >= 1 && (
+                        <div className={kontrol}>
+                            <span className="text-text">{numPoles === 1 ? 'Real Pole 1' : 'Pole Pair 1'}</span>
+                            <label className="mt-3 flex flex-col">
+                                <span className="font-mono" data-numeric>Real (σ1): {pRe[0]}</span>
+                                <input type="range" min="-5" max="2" step="0.1" value={pRe[0]} onChange={e => updateArr(pRe, setPRe, 0, +e.target.value)} className={slider} />
+                            </label>
+                            {numPoles >= 2 && (
+                                <label className="mt-3 flex flex-col">
+                                    <span className="font-mono" data-numeric>Imag (±ω1): {pIm[0]}</span>
+                                    <input type="range" min="0" max="8" step="0.1" value={pIm[0]} onChange={e => updateArr(pIm, setPIm, 0, +e.target.value)} className={slider} />
+                                </label>
+                            )}
+                        </div>
+                    )}
+                    {numPoles >= 3 && (
+                        <div className={kontrol}>
+                            <span className="text-text">{numPoles === 3 ? 'Real Pole 2' : 'Pole Pair 2'}</span>
+                            <label className="mt-3 flex flex-col">
+                                <span className="font-mono" data-numeric>Real (σ2): {pRe[1]}</span>
+                                <input type="range" min="-5" max="2" step="0.1" value={pRe[1]} onChange={e => updateArr(pRe, setPRe, 1, +e.target.value)} className={slider} />
+                            </label>
+                            {numPoles >= 4 && (
+                                <label className="mt-3 flex flex-col">
+                                    <span className="font-mono" data-numeric>Imag (±ω2): {pIm[1]}</span>
+                                    <input type="range" min="0" max="8" step="0.1" value={pIm[1]} onChange={e => updateArr(pIm, setPIm, 1, +e.target.value)} className={slider} />
+                                </label>
+                            )}
+                        </div>
+                    )}
+                    {numPoles === 5 && (
+                        <div className={kontrol}>
+                            <span className="text-text">Real Pole 3</span>
+                            <label className="mt-3 flex flex-col">
+                                <span className="font-mono" data-numeric>Real (σ3): {pRe[2]}</span>
+                                <input type="range" min="-5" max="2" step="0.1" value={pRe[2]} onChange={e => updateArr(pRe, setPRe, 2, +e.target.value)} className={slider} />
+                            </label>
+                        </div>
+                    )}
+                </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {render2D(data.step.t, data.step.y, 'Step Response', 'Time (s)', 'y(t)', '#2563eb')}
-        {render2D(data.impulse.t, data.impulse.y, 'Impulse Response', 'Time (s)', 'y(t)', '#059669')}
-        {render2D(data.bode.w, data.bode.mag, 'Magnitude Response', 'Frequency (rad/s)', 'Magnitude (dB)', '#d97706', true)}
+                <div className="space-y-3">
+                    <h2 className="font-mono text-meta uppercase tracking-wide text-text-muted">Zeros</h2>
+                    {numZeros === 0 && <p className="text-sm text-text-muted">Belum ada zero yang dipilih.</p>}
+                    {numZeros >= 1 && (
+                        <div className={kontrol}>
+                            <span className="text-text">{numZeros === 1 ? 'Real Zero 1' : 'Zero Pair 1'}</span>
+                            <label className="mt-3 flex flex-col">
+                                <span className="font-mono" data-numeric>Real (σ_z1): {zRe[0]}</span>
+                                <input type="range" min="-6" max="2" step="0.1" value={zRe[0]} onChange={e => updateArr(zRe, setZRe, 0, +e.target.value)} className={slider} />
+                            </label>
+                            {numZeros >= 2 && (
+                                <label className="mt-3 flex flex-col">
+                                    <span className="font-mono" data-numeric>Imag (±ω_z1): {zIm[0]}</span>
+                                    <input type="range" min="0" max="8" step="0.1" value={zIm[0]} onChange={e => updateArr(zIm, setZIm, 0, +e.target.value)} className={slider} />
+                                </label>
+                            )}
+                        </div>
+                    )}
+                    {numZeros >= 3 && (
+                        <div className={kontrol}>
+                            <span className="text-text">{numZeros === 3 ? 'Real Zero 2' : 'Zero Pair 2'}</span>
+                            <label className="mt-3 flex flex-col">
+                                <span className="font-mono" data-numeric>Real (σ_z2): {zRe[1]}</span>
+                                <input type="range" min="-6" max="2" step="0.1" value={zRe[1]} onChange={e => updateArr(zRe, setZRe, 1, +e.target.value)} className={slider} />
+                            </label>
+                            {numZeros >= 4 && (
+                                <label className="mt-3 flex flex-col">
+                                    <span className="font-mono" data-numeric>Imag (±ω_z2): {zIm[1]}</span>
+                                    <input type="range" min="0" max="8" step="0.1" value={zIm[1]} onChange={e => updateArr(zIm, setZIm, 1, +e.target.value)} className={slider} />
+                                </label>
+                            )}
+                        </div>
+                    )}
+                    {numZeros === 5 && (
+                        <div className={kontrol}>
+                            <span className="text-text">Real Zero 3</span>
+                            <label className="mt-3 flex flex-col">
+                                <span className="font-mono" data-numeric>Real (σ_z3): {zRe[2]}</span>
+                                <input type="range" min="-6" max="2" step="0.1" value={zRe[2]} onChange={e => updateArr(zRe, setZRe, 2, +e.target.value)} className={slider} />
+                            </label>
+                        </div>
+                    )}
+                </div>
+            </div>
 
-        <div className="md:col-span-2">
-        <Plot
-        data={[
-            {
-                x: data.surface.sigma, y: data.surface.omega, z: data.surface.z,
-            type: 'surface', colorscale: 'Viridis',
-            contours: { x: { show: true, color: 'rgba(255,255,255,0.3)', width: 1 }, y: { show: true, color: 'rgba(255,255,255,0.3)', width: 1 }, z: { show: true, usecolormap: true, project: { z: true } } }
-            },
-            {
-                x: data.zeros.x, y: data.zeros.y, z: data.zeros.z,
-            type: 'scatter3d', mode: 'markers', name: 'Zeros (o)',
-            marker: { size: 8, color: '#2563eb', symbol: 'circle' }
-            }
-        ]}
-        layout={{ title: '3D s-Plane Surface Magnitude |H(s)|', scene: { xaxis: { title: { text: 'Real (σ)' } }, yaxis: { title: { text: 'Imag (jω)' } }, zaxis: { title: { text: '|H(s)|' } } }, margin: { l: 20, r: 20, t: 40, b: 20 }, autosize: true }}
-        useResizeHandler className="w-full h-[600px]"
-        />
-        </div>
-        </div>
+            <div className="grid grid-cols-1 gap-8 tablet:grid-cols-2">
+                {render2D(data.step.t, data.step.y, 'Step Response', 'Time (s)', 'y(t)')}
+                {render2D(data.impulse.t, data.impulse.y, 'Impulse Response', 'Time (s)', 'y(t)')}
+                {render2D(data.bode.w, data.bode.mag, 'Magnitude Response', 'Frequency (rad/s)', 'Magnitude (dB)', true)}
+
+                <div className={`${kartu} tablet:col-span-2`}>
+                    <Plot
+                        data={[
+                            {
+                                x: data.surface.sigma, y: data.surface.omega, z: data.surface.z,
+                                type: 'surface',
+                                // Viridis is a rainbow. This ramp is navy → maroon → gold:
+                                // on-palette, and monotonic in lightness so magnitude still reads.
+                                colorscale: [
+                                    [0, token('--bg')],
+                                    [0.5, token('--accent-deep')],
+                                    [1, token('--highlight')],
+                                ],
+                                contours: {
+                                    x: { show: true, color: token('--border'), width: 1 },
+                                    y: { show: true, color: token('--border'), width: 1 },
+                                    z: { show: true, usecolormap: true, project: { z: true } }
+                                }
+                            },
+                            {
+                                x: data.zeros.x, y: data.zeros.y, z: data.zeros.z,
+                                type: 'scatter3d', mode: 'markers', name: 'Zeros (o)',
+                                // §2 — gold is the annotation hue. Markers annotate the surface.
+                                marker: { size: 6, color: token('--highlight'), symbol: 'circle' }
+                            }
+                        ]}
+                        layout={{
+                            paper_bgcolor: 'rgba(0,0,0,0)',
+                            plot_bgcolor: 'rgba(0,0,0,0)',
+                            font: { color: token('--text-muted'), size: 13 },
+                            title: { text: '3D s-Plane Surface Magnitude |H(s)|', font: { color: token('--text'), size: 15 } },
+                            scene: {
+                                xaxis: { title: { text: 'Real (σ)' }, gridcolor: token('--border') },
+                                yaxis: { title: { text: 'Imag (jω)' }, gridcolor: token('--border') },
+                                zaxis: { title: { text: '|H(s)|' }, gridcolor: token('--border') }
+                            },
+                            margin: { l: 20, r: 20, t: 40, b: 20 },
+                            autosize: true,
+                        }}
+                        useResizeHandler className="h-[600px] w-full"
+                    />
+                </div>
+            </div>
         </div>
     );
 }
