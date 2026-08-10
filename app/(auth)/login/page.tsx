@@ -1,5 +1,14 @@
 import Section1 from "./sections/Section1";
 
-export default function Page() {
-  return <Section1 />;
+export const metadata = { title: "Masuk — Controllab" };
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  // Only same-origin paths. An open redirect here would be a phishing vector.
+  const tujuan = next?.startsWith("/") && !next.startsWith("//") ? next : "/praktikum";
+  return <Section1 next={tujuan} />;
 }

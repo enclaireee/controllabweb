@@ -41,8 +41,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // design.md §8/§9 — UI is Indonesian. WCAG 3.1.1: without lang="id" a
+    // screen reader speaks Indonesian strings with English phonemes.
     <html
-      lang="en"
+      lang="id"
       className={`${generalSans.variable} ${neueMontreal.variable} ${reckless.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

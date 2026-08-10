@@ -1,4 +1,9 @@
-// Login
-export default function Section1() {
-  return <div className="flex h-screen items-center justify-center font-bold">Section1 — Login</div>;
+import FormLogin from "@/components/FormLogin";
+
+export default function Section1({ next }: { next: string }) {
+  return (
+    <div className="flex min-h-dvh items-center justify-center px-5 py-20">
+      <FormLogin next={next} />
+    </div>
+  );
 }

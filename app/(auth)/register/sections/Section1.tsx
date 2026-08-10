@@ -1,4 +1,9 @@
-// Register
+import FormDaftar from "@/components/FormDaftar";
+
 export default function Section1() {
-  return <div className="flex h-screen items-center justify-center font-bold">Section1 — Register</div>;
+  return (
+    <div className="flex min-h-dvh items-center justify-center px-5 py-20">
+      <FormDaftar />
+    </div>
+  );
 }
