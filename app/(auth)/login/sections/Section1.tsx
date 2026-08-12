@@ -31,7 +31,7 @@ export default function Section1() {
       setErrorMsg(error.message);
       setLoading(false);
     } else {
-      router.push("/dashboard"); // Ubah path ini sesuai halaman tujuan setelah login
+      router.push("/dashboard");
     }
   };
 
