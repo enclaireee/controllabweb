@@ -1,82 +1,8 @@
-import React from 'react';
 
 export default function AboutPage() {
   return (
-    <section className="bg-bg text-text-body min-h-screen p-6 md:p-12">
-      <div className="max-w-(--container-content) mx-auto space-y-8">
-        
-        {/* Header Section */}
-        <div className="border-b border-border pb-6">
-          <span className="text-meta text-highlight font-mono tracking-wider uppercase">
-            Sistem Laboratorium K3 & Kontrol
-          </span>
-          <h1 className="text-xl md:text-2xl font-display font-bold text-text mt-1">
-            Modul Praktikum Berlangsung
-          </h1>
-          <p className="text-sm text-text-muted mt-2">
-            Pilih modul di bawah untuk mengunduh petunjuk praktikum atau mengumpulkan laporan.
-          </p>
-        </div>
-
-        {/* Grid Card Praktikum */}
-        <div className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-6">
-          
-          {/* Card Modul 1 */}
-          <div className="bg-surface border border-border rounded-card p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-accent transition-colors">
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-meta bg-accent/10 text-accent px-2.5 py-1 rounded-button font-medium">
-                  MODUL 01
-                </span>
-                <span className="text-meta text-highlight font-semibold">
-                  ● AKTIF
-                </span>
-              </div>
-              <h3 className="text-lg font-display font-bold text-text">
-                Analisis Sinyal & Sistem Mikroprosesor
-              </h3>
-              <p className="text-sm text-text-muted mt-2 line-clamp-2">
-                Pemrosesan sinyal digital dan implementasi pembacaan register pada arsitektur x86.
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-border flex items-center justify-between">
-              <span className="text-meta text-text-muted">Batas waktu: 23:59 WIB</span>
-              <button className="bg-accent hover:bg-accent-deep text-white text-sm font-medium px-4 py-2 rounded-button transition-colors cursor-pointer">
-                Buka Modul
-              </button>
-            </div>
-          </div>
-
-          {/* Card Modul 2 */}
-          <div className="bg-surface border border-border rounded-card p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-accent transition-colors">
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-meta bg-border text-text-muted px-2.5 py-1 rounded-button font-medium">
-                  MODUL 02
-                </span>
-                <span className="text-meta text-text-muted">
-                  Mendatang
-                </span>
-              </div>
-              <h3 className="text-lg font-display font-bold text-text">
-                Rangkaian Daya & Identifikasi Bahaya K3
-              </h3>
-              <p className="text-sm text-text-muted mt-2 line-clamp-2">
-                Evaluasi faktor daya, pengukuran impedansi, serta prosedur keselamatan kerja laboratorium.
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-border flex items-center justify-between">
-              <span className="text-meta text-text-muted">Tersedia 12 April</span>
-              <button disabled className="bg-border text-text-muted text-sm font-medium px-4 py-2 rounded-button cursor-not-allowed">
-                Terkunci
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
+    <div>
+      <h1>Tentang Kami</h1>
+    </div>
   );
 }

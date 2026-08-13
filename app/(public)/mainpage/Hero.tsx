@@ -28,28 +28,31 @@ export default function Hero() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-highlight animate-pulse" />
             <span className="text-meta text-highlight font-mono uppercase tracking-wider">
-              Laboratorium Kontrol & Otomasi
+              Laboratorium Teknik Kendali
             </span>
           </div>
 
           <h1 className="text-2xl md:text-3xl font-display font-bold text-text leading-tight tracking-tight">
-            Advancing Excellence in Control Systems, Signal Processing & Digital Simulation.
+            Control Laboratory Learning Center
           </h1>
 
           <p className="text-sm md:text-base text-text-muted max-w-xl">
-            Pusat kegiatan praktikum, analisis sinyal, dan eksperimen sistem kontrol berbasis perangkat keras serta simulasi interaktif.
+            Pusat kegiatan praktikum dan simulasi untuk Praktikum Teknik Kendali
           </p>
 
           <div className="pt-4 flex flex-wrap gap-4">
+            {/* PERBAIKAN 1: Arahkan Learn More ke /about (tempat modul berada) */}
             <Link
-              href="/materi"
+              href="/about"
               className="border border-border bg-surface/50 hover:border-accent text-text px-6 py-3 rounded-button font-medium text-sm transition-all flex items-center gap-2 group"
             >
               <span>Learn More</span>
               <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
             </Link>
+
+            {/* PERBAIKAN 2: Ubah href Contacts ke "#" agar tidak mengarah ke modul */}
             <Link
-              href="/about#contacts"
+              href="#"
               className="border border-border bg-surface/50 hover:border-accent text-text px-6 py-3 rounded-button font-medium text-sm transition-all flex items-center gap-2 group"
             >
               <span>Contacts</span>
@@ -58,7 +61,7 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Kolom Visual / Foto Tim Asisten (Seperti di Slide 2) */}
+        {/* Kolom Visual / Foto Tim Asisten */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -74,7 +77,7 @@ export default function Hero() {
             <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent opacity-80" />
             <div className="absolute bottom-4 left-4 right-4 p-4 bg-surface/90 backdrop-blur-md rounded-button border border-border">
               <p className="text-meta font-mono text-highlight">TIM ASISTEN 2025/2026</p>
-              <p className="text-sm font-bold text-text">Laboratorium Kontrol & Otomasi</p>
+              <p className="text-sm font-bold text-text">Laboratorium Teknik Kendali</p>
             </div>
           </div>
         </motion.div>
