@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type SubmitEvent } from "react";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
@@ -34,7 +34,7 @@ export default function FormLaporan({
     );
   }
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setMengirim(true);
     setError(undefined);

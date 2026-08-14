@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type SubmitEvent } from "react";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
@@ -19,7 +19,7 @@ export default function FormResetSandi() {
   const [error, setError] = useState<string>();
   const [kirim, setKirim] = useState(false);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (sandi !== ulang) {
       setError("Kedua kata sandi tidak sama.");

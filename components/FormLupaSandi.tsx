@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type SubmitEvent } from "react";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
@@ -19,7 +19,7 @@ export default function FormLupaSandi() {
   const [kirim, setKirim] = useState(false);
   const [selesai, setSelesai] = useState(false);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setKirim(true);
     const sb = createClient();
