@@ -1,5 +1,9 @@
-import Section1 from "./sections/Section1";
+import Hero from "./mainpage/Hero";
 
-export default function Page() {
-  return <Section1 />;
+export default function HomePage() {
+  return (
+    <main>
+      <Hero />
+    </main>
+  );
 }

@@ -1,5 +1,8 @@
-import Section1 from "./sections/Section1";
 
-export default function Page() {
-  return <Section1 />;
+export default function AboutPage() {
+  return (
+    <div>
+      <h1>Tentang Kami</h1>
+    </div>
+  );
 }
