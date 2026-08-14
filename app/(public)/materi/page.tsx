@@ -36,15 +36,21 @@ export default function AboutPage() {
                 Control System Introduction
               </h3>
               <p className="text-sm text-text-muted mt-2 line-clamp-2">
-                Dasar-dasar Teknik Kendali x86.
+                Dasar-dasar Teknik Kendali
               </p>
             </div>
 
             <div className="pt-4 border-t border-border flex items-center justify-between">
               <span className="text-meta text-text-muted">Batas waktu: 23:59 WIB</span>
-              <button className="bg-accent hover:bg-accent-deep text-white text-sm font-medium px-4 py-2 rounded-button transition-colors cursor-pointer">
+              {/* Link Google Drive Modul 01 */}
+              <a 
+                href="https://drive.google.com/file/d/1xt5958AvBdf2yglVpip06DKRWb4SflQz/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-accent hover:bg-accent-deep text-white text-sm font-medium px-4 py-2 rounded-button transition-colors cursor-pointer inline-block"
+              >
                 Buka Modul
-              </button>
+              </a>
             </div>
           </div>
 
