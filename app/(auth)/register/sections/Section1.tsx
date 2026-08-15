@@ -1,111 +1,185 @@
 "use client";
 
-import { useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState, type SubmitEvent } from "react";
 
-export default function RegisterPage() {
+import { createClient } from "@/lib/supabase/client";
+
+export default function Section1() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [npm, setNpm] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [done, setDone] = useState(false);
 
-  const router = useRouter();
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!/^\d{8,12}$/.test(npm.trim())) {
+      setErrorMsg("NPM harus 8–12 digit angka.");
+      return;
+    }
+
     setLoading(true);
     setErrorMsg("");
 
-    const { error } = await supabase.auth.signUp({
+    const { error } = await createClient().auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-        },
+        data: { nama: fullName.trim(), npm: npm.trim() },
       },
     });
 
+    setLoading(false);
     if (error) {
-      setErrorMsg(error.message);
-      setLoading(false);
-    } else {
-      alert("Registrasi berhasil! Silakan cek email kamu atau langsung login.");
-      router.push("/login");
+      setErrorMsg(
+        error.message.includes("already registered")
+          ? "Email ini sudah terdaftar."
+          : error.message,
+      );
+      return;
     }
+    setDone(true);
   };
 
+  const field =
+    "h-10 w-full rounded-button border border-border-strong bg-surface px-3 text-sm text-text " +
+    "transition-colors duration-120 ease-signal placeholder:text-text-muted " +
+    "hover:border-text-muted focus:border-accent";
+  const labelCls = "text-meta font-medium text-text";
+
+  if (done) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center px-5 py-20">
+        <div className="w-full max-w-prose rounded-card border border-border bg-surface p-8">
+          <h1 className="font-display text-xl font-medium text-text">
+            Cek email kamu
+          </h1>
+          <p className="mt-3 text-sm text-text-body">
+            Kami mengirim tautan konfirmasi ke{" "}
+            <span className="font-mono text-text">{email}</span>. Buka tautannya,
+            lalu masuk.
+          </p>
+          <Link
+            href="/login"
+            className="mt-8 inline-block text-sm text-accent-text underline decoration-1 underline-offset-2 hover:text-text"
+          >
+            Ke halaman masuk
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
-      <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-md border border-border">
-        <h2 className="mb-6 text-center text-2xl font-bold">
-          Daftar Akun Baru
-        </h2>
+    <div className="flex min-h-dvh items-center justify-center px-5 py-20">
+      <div className="w-full max-w-prose rounded-card border border-border bg-surface p-8">
+        <h1 className="font-display text-xl font-medium text-text">Buat Akun</h1>
+        <p className="mt-2 text-sm text-text-muted">
+          Untuk praktikan Laboratorium Sistem Kendali.
+        </p>
 
         {errorMsg && (
-          <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20">
+          <p
+            role="alert"
+            className="mt-5 rounded-button border border-danger px-3 py-2 text-meta text-danger"
+          >
             {errorMsg}
-          </div>
+          </p>
         )}
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 opacity-90">
-              Nama Lengkap
+        <form onSubmit={handleRegister} className="mt-8 space-y-5">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="nama" className={labelCls}>
+              Nama lengkap
             </label>
             <input
+              id="nama"
               type="text"
+              autoComplete="name"
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className={field}
               placeholder="Nama kamu"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1 opacity-90">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="npm" className={labelCls}>
+              NPM
+            </label>
+            <input
+              id="npm"
+              type="text"
+              inputMode="numeric"
+              required
+              value={npm}
+              onChange={(e) => setNpm(e.target.value)}
+              className={field}
+              placeholder="2106701234"
+              aria-describedby="npm-hint"
+            />
+            <p id="npm-hint" className="text-meta text-text-muted">
+              Nomor Pokok Mahasiswa, angka saja
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className={labelCls}>
               Email
             </label>
             <input
+              id="email"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className={field}
               placeholder="nama@email.com"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1 opacity-90">
-              Password
+          <div className="flex flex-col gap-2">
+            <label htmlFor="password" className={labelCls}>
+              Kata sandi
             </label>
             <input
+              id="password"
               type="password"
+              autoComplete="new-password"
               required
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="Minimal 6 karakter"
+              className={field}
+              placeholder="Minimal 8 karakter"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all"
+            aria-busy={loading || undefined}
+            className="inline-flex h-10 items-center justify-center rounded-button bg-accent px-5 text-sm font-medium text-on-accent transition-colors duration-120 ease-signal hover:bg-accent-hover active:bg-accent-active disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Memproses..." : "Daftar"}
+            {loading ? "Memproses..." : "Buat akun"}
           </button>
         </form>
+
+        <p className="mt-8 text-meta text-text-muted">
+          Sudah punya akun?{" "}
+          <Link
+            href="/login"
+            className="text-accent-text underline decoration-1 underline-offset-2 hover:text-text"
+          >
+            Masuk
+          </Link>
+        </p>
       </div>
     </div>
   );

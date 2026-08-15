@@ -1,20 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/**
- * Next 16 renamed middleware to `proxy`. Two jobs:
- *   1. refresh the Supabase session cookie on every request
- *   2. keep people out of routes their role has no business in
- *
- * (2) is convenience, not security. RLS is the real boundary — a praktikan who
- * bypasses these redirects still gets zero rows from the database.
- */
+const TERLINDUNGI = ["/praktikum", "/asisten"];
 
-/** Signed-in only. */
-const TERLINDUNGI = ["/praktikum", "/penilaian"];
-/** Asisten only. */
-const KHUSUS_ASISTEN = ["/penilaian"];
-/** Pointless once you are signed in. */
+const KHUSUS_ASISTEN = ["/asisten"];
+
 const HANYA_TAMU = ["/login", "/register", "/lupa-sandi"];
 
 const cocok = (path: string, daftar: string[]) =>
@@ -44,12 +34,12 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Also refreshes the session cookie if it expired.
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
   const ke = (tujuan: string) => {
     const url = request.nextUrl.clone();
     url.pathname = tujuan;
@@ -57,7 +47,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   };
 
-  // Not signed in, asking for something protected → login, remembering where.
   if (!user && cocok(path, TERLINDUNGI)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -66,18 +55,24 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user) {
-    // /reset-sandi is absent from HANYA_TAMU on purpose: the emailed link
-    // signs you in with a recovery session, so you are always "logged in"
-    // by the time you get there.
-    if (cocok(path, HANYA_TAMU)) return ke("/praktikum");
+    const perluRole =
+      cocok(path, HANYA_TAMU) ||
+      cocok(path, KHUSUS_ASISTEN) ||
+      cocok(path, ["/praktikum"]);
 
-    if (cocok(path, KHUSUS_ASISTEN)) {
+    if (perluRole) {
       const { data: profil } = await supabase
         .from("profil")
         .select("role")
         .eq("id", user.id)
-        .single();
-      if (profil?.role !== "asisten") return ke("/praktikum");
+        .maybeSingle();
+
+      const asisten = profil?.role === "asisten";
+      const beranda = asisten ? "/asisten" : "/praktikum";
+
+      if (cocok(path, HANYA_TAMU)) return ke(beranda);
+      if (cocok(path, KHUSUS_ASISTEN) && !asisten) return ke("/praktikum");
+      if (asisten && cocok(path, ["/praktikum"])) return ke("/asisten");
     }
   }
 

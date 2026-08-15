@@ -7,16 +7,6 @@ import {
   type ModulPraktikan,
 } from "@/lib/praktikum";
 
-/**
- * design.md §6 — the signature element, simplified.
- *
- * One modul per row: pretest done or not, laporan submitted or not, and the
- * average once all three scores exist. Renders a <tr>; the parent supplies the
- * table. A real table is what keeps eight rows aligned down a column.
- *
- * "Exactly one accent mark on whatever needs attention" — the left rule.
- */
-
 function Tanda({ ada, label }: { ada: boolean; label: string }) {
   return (
     <span className={ada ? "text-meta text-success" : "text-meta text-text-muted"}>

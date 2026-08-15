@@ -2,20 +2,9 @@
 
 import { useRef, useState } from "react";
 
-import {
-  simpanNilai,
-  validasiNilai,
-  type KolomNilai,
-} from "@/lib/praktikum";
+import { validasiNilai, type KolomNilai } from "@/lib/praktikum";
+import { simpanNilai } from "@/lib/praktikum.actions";
 
-/**
- * One cell of the grading sheet. Autosaves on blur, so an asisten tabs down a
- * column and never touches a button. Enter also saves without leaving.
- *
- * design.md §5 — flashes --success at 12% on save, 180ms. The only motion in
- * the sheet; rows never animate.
- * §9 — the flash is not the only signal; every outcome hits the live region.
- */
 export default function ScoreInput({
   modulId,
   praktikanId,
@@ -29,7 +18,7 @@ export default function ScoreInput({
   kolom: KolomNilai;
   awal: number | null;
   label: string;
-  /** Lets the parent recompute the average as you type down the column. */
+
   onTersimpan: (nilai: number | null) => void;
 }) {
   const [teks, setTeks] = useState(awal === null ? "" : String(awal));

@@ -10,16 +10,6 @@ import {
   type Penilaian,
 } from "@/lib/praktikum";
 
-/**
- * The grading sheet. One row per praktikan, three score columns, average on
- * the right — the average is what the praktikan sees on their own dashboard.
- *
- * design.md §4 — densest tier: 12px cells. An asisten enters thirty scores in
- * a sitting and must not scroll to do it.
- * §9 — grading needs 768px; below that this is read-only rather than cramming
- * number inputs onto a phone.
- */
-
 const KOLOM: { kunci: KolomNilai; label: string }[] = [
   { kunci: "nilaiPretest", label: "Pretest" },
   { kunci: "nilaiQna", label: "Tanya Jawab" },
@@ -36,7 +26,7 @@ export default function RosterTable({
   modulId: string;
   roster: BarisRoster[];
 }) {
-  // Held here so the average recomputes the moment a cell saves.
+
   const [nilai, setNilai] = useState<Record<string, Penilaian>>(() =>
     Object.fromEntries(roster.map((b) => [b.praktikanId, b.penilaian])),
   );

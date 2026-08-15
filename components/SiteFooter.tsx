@@ -3,17 +3,11 @@ import Link from "next/link";
 const GROUPS = [
   {
     heading: "Praktikum",
-    links: [
-      { href: "/praktikum", label: "Modul" },
-      { href: "/nilai", label: "Nilai" },
-    ],
+    links: [{ href: "/praktikum", label: "Modul praktikum" }],
   },
   {
     heading: "Belajar",
-    links: [
-      { href: "/materi", label: "Materi" },
-      { href: "/simulator", label: "Simulator" },
-    ],
+    links: [{ href: "/simulator", label: "Simulator" }],
   },
   {
     heading: "Lab",
@@ -24,18 +18,6 @@ const GROUPS = [
   },
 ];
 
-/**
- * Global site footer. design.md §4, §7, §8.
- *
- * Collapse plan:
- *   <768px   single column, groups stacked, identity line last
- *   768px+   three columns for the groups, wordmark on its own row above
- *   1280px+  four columns, wordmark takes the first
- *
- * The one restrained detail (§6 tie-back) is the mono identity line above the
- * hairline — same grammar as the status row: monospace, uppercase, hairline-
- * separated, no colour. Nothing else in here is allowed to compete with it.
- */
 export default function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-border">
@@ -75,7 +57,6 @@ export default function SiteFooter() {
           ))}
         </div>
 
-        {/* §6 tie-back — the status-row grammar, applied once. */}
         <p className="mt-20 border-t border-border pt-8 font-mono text-meta uppercase tracking-wide text-text-muted">
           Lab Sistem Kendali
           <span aria-hidden="true" className="px-3 text-border-strong">

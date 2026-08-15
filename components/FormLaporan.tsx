@@ -1,17 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type SubmitEvent } from "react";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { kirimLaporan } from "@/lib/praktikum";
+import { kirimLaporan } from "@/lib/praktikum.actions";
 
-/**
- * Laporan is submitted as a Google Drive link, not a file upload.
- *
- * Client-side validation mirrors the server; it does not replace it. The RPC
- * re-checks the URL and the deadline — hiding a button is not enforcement.
- */
 export default function FormLaporan({
   modulId,
   tautanAwal,
@@ -34,7 +28,7 @@ export default function FormLaporan({
     );
   }
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setMengirim(true);
     setError(undefined);

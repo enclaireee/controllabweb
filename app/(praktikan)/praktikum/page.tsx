@@ -1,5 +1,5 @@
 import StatusRow from "@/components/StatusRow";
-import { ambilModulPraktikan, ambilProfilRingkas } from "@/lib/praktikum";
+import { ambilModulPraktikan, ambilProfilRingkas } from "@/lib/praktikum.queries";
 
 export const metadata = { title: "Praktikum — Controllab" };
 

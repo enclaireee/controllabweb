@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import RosterTable from "@/components/RosterTable";
-import { ambilModul, ambilRoster, formatTanggal } from "@/lib/praktikum";
+import { formatTanggal } from "@/lib/praktikum";
+import { ambilModul, ambilRoster } from "@/lib/praktikum.queries";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -21,7 +22,7 @@ export default async function PenilaianModulPage({ params }: Props) {
     <div className="mx-auto max-w-content px-5 py-12 tablet:px-8">
       <header className="mb-12">
         <Link
-          href="/penilaian"
+          href="/asisten"
           className="text-meta text-text-muted transition-colors duration-120 ease-signal hover:text-text"
         >
           ← Semua modul

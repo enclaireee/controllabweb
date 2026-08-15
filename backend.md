@@ -63,13 +63,14 @@ drop table if exists public.penilaian cascade;
 drop table if exists public.soal      cascade;
 drop table if exists public.modul     cascade;
 drop table if exists public.profil    cascade;
-
--- Storage bucket from an older draft; we now use plain links
-delete from storage.objects where bucket_id = 'modul';
-delete from storage.buckets where id = 'modul';
 ```
 
 Expect `Success. No rows returned`.
+
+> If you ever made a `modul` storage bucket in an older attempt, delete it under
+> `Storage → modul → Delete bucket`. Supabase blocks `delete from storage.buckets` in
+> SQL on purpose, so it cannot be scripted here. We do not use a bucket any more —
+> `modul.pdf_url` is just a link.
 
 ---
 
@@ -345,7 +346,12 @@ where slug = 'root-locus';
 
 ---
 
-# Step 10 — Enable email confirmation
+# Step 10 — Auth settings
+
+> Steps 11 and 12 create accounts directly in SQL with the email already confirmed, so
+> nothing here blocks you from logging in. It still matters for anyone who signs up
+> through `/register`, and the Redirect URL is required for forgot-password.
+
 
 `Authentication → Sign In / Providers → Email`
 
@@ -364,33 +370,262 @@ Without that second one, the forgot-password link goes nowhere.
 
 ---
 
-# Step 11 — Make your own account
+# Step 11 — Create the asisten account (hardcoded)
 
-1. `npm run dev`, open `http://localhost:3000/register`
-2. Sign up with your name, NPM, email, password
-3. Confirm via the email that arrives
-4. Check the trigger worked:
+Makes the account, confirms the email, and sets the role to `asisten` in one go — no
+signup form, no confirmation email. Change the first four values if you want different
+ones; everything else is machinery.
 
-```sql
-select id, nama, npm, role from public.profil;
+```
+Email     fatih@controllab.test
+Password  praktikum2026
 ```
 
-You should see one row, role `praktikan`.
+```sql
+create extension if not exists pgcrypto with schema extensions;
+
+do $$
+declare
+  v_email text := 'fatih@controllab.test';
+  v_sandi text := 'praktikum2026';
+  v_nama  text := 'Fatih';
+  v_npm   text := '2106700001';
+  v_id    uuid;
+begin
+  select id into v_id from auth.users where email = v_email;
+
+  if v_id is null then
+    v_id := gen_random_uuid();
+
+    insert into auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, created_at, updated_at,
+      raw_app_meta_data, raw_user_meta_data,
+      confirmation_token, recovery_token, email_change_token_new, email_change
+    ) values (
+      '00000000-0000-0000-0000-000000000000',
+      v_id, 'authenticated', 'authenticated', v_email,
+      extensions.crypt(v_sandi, extensions.gen_salt('bf')),
+      now(), now(), now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      jsonb_build_object('nama', v_nama, 'npm', v_npm),
+      '', '', '', ''
+    );
+
+    insert into auth.identities (
+      id, user_id, identity_data, provider, provider_id,
+      last_sign_in_at, created_at, updated_at
+    ) values (
+      gen_random_uuid(), v_id,
+      jsonb_build_object('sub', v_id::text, 'email', v_email),
+      'email', v_id::text, now(), now(), now()
+    );
+  else
+    update auth.users
+       set encrypted_password = extensions.crypt(v_sandi, extensions.gen_salt('bf')),
+           email_confirmed_at = coalesce(email_confirmed_at, now())
+     where id = v_id;
+  end if;
+
+  insert into public.profil (id, nama, npm, role)
+  values (v_id, v_nama, v_npm, 'asisten')
+  on conflict (id) do update
+    set nama = excluded.nama, npm = excluded.npm, role = 'asisten';
+end $$;
+```
+
+Check it:
+
+```sql
+select p.nama, p.npm, p.role, u.email, u.email_confirmed_at is not null as terkonfirmasi
+  from public.profil p join auth.users u on u.id = p.id;
+```
+
+Expect one row: `Fatih / 2106700001 / asisten / fatih@controllab.test / true`.
+
+> Re-running this block resets the password to whatever `v_sandi` says. That is how you
+> recover a forgotten asisten password without email.
 
 ---
 
-# Step 12 — Promote yourself to asisten
+# Step 12 — Create a praktikan account to test against
 
-**Replace the email with yours.**
+You need one of each. Two ways:
+
+**A — through the app** (also tests that the signup form works):
+`npm run dev` → `http://localhost:3000/register` → fill it in → confirm via email.
+
+**B — hardcoded**, same as Step 11 but ending as a praktikan. Paste this if email
+delivery is being awkward:
 
 ```sql
-update public.profil
-   set role = 'asisten'
- where id = (select id from auth.users where email = 'ganti@email.kamu');
+do $$
+declare
+  v_email text := 'praktikan@controllab.test';
+  v_sandi text := 'praktikum2026';
+  v_nama  text := 'Praktikan Uji';
+  v_npm   text := '2106700002';
+  v_id    uuid;
+begin
+  select id into v_id from auth.users where email = v_email;
+
+  if v_id is null then
+    v_id := gen_random_uuid();
+
+    insert into auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, created_at, updated_at,
+      raw_app_meta_data, raw_user_meta_data,
+      confirmation_token, recovery_token, email_change_token_new, email_change
+    ) values (
+      '00000000-0000-0000-0000-000000000000',
+      v_id, 'authenticated', 'authenticated', v_email,
+      extensions.crypt(v_sandi, extensions.gen_salt('bf')),
+      now(), now(), now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      jsonb_build_object('nama', v_nama, 'npm', v_npm),
+      '', '', '', ''
+    );
+
+    insert into auth.identities (
+      id, user_id, identity_data, provider, provider_id,
+      last_sign_in_at, created_at, updated_at
+    ) values (
+      gen_random_uuid(), v_id,
+      jsonb_build_object('sub', v_id::text, 'email', v_email),
+      'email', v_id::text, now(), now(), now()
+    );
+  end if;
+
+  insert into public.profil (id, nama, npm, role)
+  values (v_id, v_nama, v_npm, 'praktikan')
+  on conflict (id) do update
+    set nama = excluded.nama, npm = excluded.npm;
+end $$;
 ```
 
-Now register a **second** account with a different email and leave it as `praktikan` —
-you need one of each to test both sides.
+Both accounts, side by side:
+
+```sql
+select p.nama, p.npm, p.role, u.email from public.profil p
+  join auth.users u on u.id = p.id order by p.role;
+```
+
+> These are test credentials in a file that is committed to git. Before this is used by
+> real praktikan, change both passwords and delete the two `@controllab.test` accounts
+> under `Authentication → Users`.
+
+---
+
+# Step 12b — 10 dummy praktikan (optional)
+
+Fills the asisten grading sheet with a realistic number of rows. All ten share the
+password `praktikum2026` and use `praktikan01@controllab.test` … `praktikan10@`.
+
+```sql
+create extension if not exists pgcrypto with schema extensions;
+
+do $$
+declare
+  v_nama text[] := array[
+    'Adinda Rahmawati', 'Bagas Prakoso',   'Citra Maharani',
+    'Dimas Anggara',    'Elang Wicaksono', 'Fira Anindita',
+    'Gilang Ramadhan',  'Hana Puspita',    'Irfan Maulana',
+    'Kirana Dewi'
+  ];
+  v_sandi text := 'praktikum2026';
+  v_email text;
+  v_npm   text;
+  v_id    uuid;
+  i       int;
+begin
+  for i in 1 .. array_length(v_nama, 1) loop
+    v_email := format('praktikan%s@controllab.test', lpad(i::text, 2, '0'));
+    v_npm   := (2106700010 + i)::text;
+
+    select id into v_id from auth.users where email = v_email;
+
+    if v_id is null then
+      v_id := gen_random_uuid();
+
+      insert into auth.users (
+        instance_id, id, aud, role, email, encrypted_password,
+        email_confirmed_at, created_at, updated_at,
+        raw_app_meta_data, raw_user_meta_data,
+        confirmation_token, recovery_token, email_change_token_new, email_change
+      ) values (
+        '00000000-0000-0000-0000-000000000000',
+        v_id, 'authenticated', 'authenticated', v_email,
+        extensions.crypt(v_sandi, extensions.gen_salt('bf')),
+        now(), now(), now(),
+        '{"provider":"email","providers":["email"]}'::jsonb,
+        jsonb_build_object('nama', v_nama[i], 'npm', v_npm),
+        '', '', '', ''
+      );
+
+      insert into auth.identities (
+        id, user_id, identity_data, provider, provider_id,
+        last_sign_in_at, created_at, updated_at
+      ) values (
+        gen_random_uuid(), v_id,
+        jsonb_build_object('sub', v_id::text, 'email', v_email),
+        'email', v_id::text, now(), now(), now()
+      );
+    end if;
+
+    insert into public.profil (id, nama, npm, role)
+    values (v_id, v_nama[i], v_npm, 'praktikan')
+    on conflict (id) do update
+      set nama = excluded.nama, npm = excluded.npm;
+  end loop;
+end $$;
+```
+
+Check:
+
+```sql
+select nama, npm, role from public.profil order by role, nama;
+```
+
+Expect 12 rows — 1 asisten, 11 praktikan.
+
+## Give some of them scores and submissions
+
+Optional, but it makes the praktikan dashboard and the average column show something
+other than empty. Fills modules 1–2 for the first five people.
+
+```sql
+insert into public.penilaian
+  (modul_id, praktikan_id, pretest_selesai, laporan_tautan, laporan_at,
+   nilai_pretest, nilai_qna, nilai_laprak)
+select
+  m.id,
+  p.id,
+  true,
+  'https://drive.google.com/file/d/contoh/view',
+  now(),
+  70 + (row_number() over (order by p.nama)) * 2,
+  75 + (row_number() over (order by p.nama)),
+  case when m.urutan = 1 then 80 + (row_number() over (order by p.nama)) else null end
+from public.modul m
+cross join (
+  select id, nama from public.profil
+   where role = 'praktikan' order by nama limit 5
+) p
+where m.urutan in (1, 2)
+on conflict (modul_id, praktikan_id) do nothing;
+```
+
+Module 1 ends up fully graded, so the average shows. Module 2 has `nilai_laprak` left
+null on purpose, so you can see the "not yet complete" state too.
+
+## Removing them later
+
+```sql
+delete from auth.users where email like 'praktikan%@controllab.test';
+```
+
+`profil` and `penilaian` rows cascade away with the account.
 
 ---
 

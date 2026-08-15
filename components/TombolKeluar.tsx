@@ -5,7 +5,6 @@ import { useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 
-/** Sign out. Interim, same as FormLogin — see the note there. */
 export default function TombolKeluar() {
   const router = useRouter();
   const [keluar, setKeluar] = useState(false);
