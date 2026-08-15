@@ -40,5 +40,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# iCloud Drive duplicates files in ~/Documents as "name 2.ext".
+# They are byte-identical junk; never commit them.
+*\ 2.*
+*\ [0-9].*
+
+*.md
+
 # backend
 /backend/__pycache__

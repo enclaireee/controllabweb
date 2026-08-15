@@ -1,6 +1,5 @@
 import SiteHeader, { NAV_ASISTEN } from "@/components/SiteHeader";
 
-// See (praktikan)/layout.tsx — same reasoning.
 export default function AsistenLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">

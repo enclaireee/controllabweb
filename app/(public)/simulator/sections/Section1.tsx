@@ -1,13 +1,5 @@
 import Link from "next/link";
 
-/**
- * Index of the simulators. This page was a placeholder, which is why
- * /simulator/pole-zero was unreachable by clicking — nothing linked to it.
- *
- * `siap: false` entries are routes that exist but still render a placeholder.
- * They are listed and visibly marked rather than hidden, so nobody has to grep
- * the filesystem to find out what exists.
- */
 const SIMULATOR = [
   {
     slug: "pole-zero",

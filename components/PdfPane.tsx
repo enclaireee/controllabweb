@@ -1,10 +1,3 @@
-/**
- * design.md §10 — browsers render PDFs natively. No viewer library.
- *
- * Google Drive is the likely host, and a Drive "/view" link refuses to embed:
- * it must be "/preview". Converting here rather than asking whoever seeds the
- * modul to remember, because they will not.
- */
 export function urlSematan(url: string): string {
   const drive = url.match(
     /^https:\/\/drive\.google\.com\/file\/d\/([^/]+)/,

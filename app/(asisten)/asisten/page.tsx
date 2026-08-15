@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { ambilSemuaModul, formatTanggal } from "@/lib/praktikum";
+import { formatTanggal } from "@/lib/praktikum";
+import { ambilSemuaModul } from "@/lib/praktikum.queries";
 
 export const metadata = { title: "Penilaian — Controllab" };
 
-/** The asisten's only destination: pick a modul, then grade its sheet. */
 export default async function PenilaianPage() {
   const modul = await ambilSemuaModul();
 
@@ -19,7 +19,7 @@ export default async function PenilaianPage() {
         {modul.map((m) => (
           <li key={m.id} className="border-b border-border last:border-b-0">
             <Link
-              href={`/penilaian/${m.slug}`}
+              href={`/asisten/${m.slug}`}
               className="flex flex-wrap items-baseline justify-between gap-3 px-5 py-3 transition-colors duration-120 ease-signal hover:bg-surface-raised"
             >
               <span className="text-sm text-text">

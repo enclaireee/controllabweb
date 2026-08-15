@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
-from scipy import signal
+from scipy import signal, interpolate
 
 app = FastAPI()
 
@@ -126,6 +126,16 @@ def analyze(cfg: SystemConfig):
         Mag = np.nan_to_num(Mag, nan=15.0, posinf=15.0, neginf=0.0)
         Mag = np.clip(Mag, 0, 15)
 
+    # Zero markers lifted onto the surface so they render above it
+    interp = interpolate.RegularGridInterpolator(
+        (omegas, sigmas), Mag, bounds_error=False, fill_value=0.0
+    )
+    z_markers = {
+        "x": [z.real for z in zeros],
+        "y": [z.imag for z in zeros],
+        "z": [float(interp([z.imag, z.real])[0]) + 0.15 for z in zeros],
+    }
+
     return {
         "tf_latex": f"H(s) = \\frac{{{fmt_poly(b)}}}{{{fmt_poly(a)}}}",
         "step": {"t": t.tolist(), "y": y_s.tolist()},
@@ -136,4 +146,5 @@ def analyze(cfg: SystemConfig):
             "omega": omegas.tolist(),
             "z": Mag.tolist(),
         },
+        "zeros": z_markers,
     }
