@@ -59,7 +59,7 @@ export default function RosterTable({
               <th scope="col" className={`${TH} w-28`}>
                 Rata-rata
               </th>
-              <th scope="col" className={`${TH} w-24`}>
+              <th scope="col" className={`${TH} w-56`}>
                 Laporan
               </th>
             </tr>
@@ -119,14 +119,22 @@ export default function RosterTable({
 
                   <td className="px-5 py-3 align-top">
                     {p.laporanTautan ? (
-                      <a
-                        href={p.laporanTautan}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-meta text-accent-text underline decoration-1 underline-offset-2 transition-colors duration-120 ease-signal hover:text-text"
-                      >
-                        Buka
-                      </a>
+                      <>
+                        <a
+                          href={p.laporanTautan}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-meta text-accent-text underline decoration-1 underline-offset-2 transition-colors duration-120 ease-signal hover:text-text"
+                        >
+                          Buka
+                        </a>
+                        <p
+                          className="mt-1 max-w-52 truncate font-mono text-meta text-text-muted"
+                          title={p.laporanTautan}
+                        >
+                          {p.laporanTautan}
+                        </p>
+                      </>
                     ) : (
                       <span className="text-meta text-text-muted">—</span>
                     )}

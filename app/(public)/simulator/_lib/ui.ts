@@ -1,7 +1,5 @@
 'use client';
 
-// Shared visual grammar for the simulator pages under app/(public)/simulator.
-
 const cache = new Map<string, string>();
 
 export const token = (name: string): string => {

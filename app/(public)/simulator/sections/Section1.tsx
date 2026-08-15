@@ -11,7 +11,7 @@ const SIMULATOR = [
   { slug: "step-response", judul: "Step Response", ringkas: "Respons sistem terhadap masukan step.", siap: false },
   { slug: "bode-plot", judul: "Bode Plot", ringkas: "Magnitude dan fasa terhadap frekuensi.", siap: false },
   { slug: "root-locus", judul: "Root Locus", ringkas: "Lintasan akar terhadap perubahan gain.", siap: false },
-  { slug: "pid-tuning", judul: "PID Tuning", ringkas: "Pengaruh Kp, Ki, dan Kd terhadap respons.", siap: false },
+  { slug: "pid-tuning", judul: "PID Tuning", ringkas: "Pengaruh Kp, Ki, dan Kd terhadap respons.", siap: true },
 ];
 
 export default function Section1() {

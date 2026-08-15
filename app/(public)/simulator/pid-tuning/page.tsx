@@ -28,7 +28,9 @@ export default function PidSimulator() {
   const [setpoint, setSetpoint] = useState(50);
 
   const paramsRef = useRef({ kp, ki, kd, setpoint });
-  paramsRef.current = { kp, ki, kd, setpoint };
+  useEffect(() => {
+    paramsRef.current = { kp, ki, kd, setpoint };
+  }, [kp, ki, kd, setpoint]);
 
   const simRef = useRef<SimState>(initialSim());
   const historyRef = useRef<History>(initialHistory());

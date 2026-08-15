@@ -9,7 +9,6 @@ import { token, plotChrome, kartu, kontrol, slider, selectCls } from '../_lib/ui
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
-/** Response shape of POST /api/analyze. Mirrors backend/main.py — read only. */
 type Analysis = {
     tf_latex: string;
     step: { t: number[]; y: number[] };

@@ -13,7 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 class SystemConfig(BaseModel):
     num_poles: int
     num_zeros: int
@@ -21,7 +20,6 @@ class SystemConfig(BaseModel):
     p_im: list[float]
     z_re: list[float]
     z_im: list[float]
-
 
 def fmt_poly(c: np.ndarray) -> str:
     """Formats polynomial coefficients into LaTeX string representation."""
@@ -56,7 +54,6 @@ def fmt_poly(c: np.ndarray) -> str:
 
     return "".join(terms) or "1"
 
-
 def build_pts(num: int, re: list[float], im: list[float]) -> list[complex]:
     """Reconstructs complex conjugate pairs safely from input lists."""
     def safe_get(lst: list[float], idx: int) -> float:
@@ -76,44 +73,36 @@ def build_pts(num: int, re: list[float], im: list[float]) -> list[complex]:
 
     return pts[:num]
 
-
 @app.post("/api/analyze")
 def analyze(cfg: SystemConfig):
-    # Reconstruct poles and zeros
     poles = build_pts(cfg.num_poles, cfg.p_re, cfg.p_im)
     zeros = build_pts(cfg.num_zeros, cfg.z_re, cfg.z_im)
 
-    # Compute Transfer Function
     b, a = signal.zpk2tf(zeros, poles, 1.0)
     b, a = np.real_if_close(b), np.real_if_close(a)
     sys_tf = signal.TransferFunction(b, a)
 
-    # Time and Frequency axes
     t = np.linspace(0, 10, 300)
     w = np.logspace(-1, 2, 300)
 
-    # Step Response
     try:
         _, y_s = signal.step(sys_tf, T=t)
         y_s = np.nan_to_num(y_s)
     except Exception:
         y_s = np.zeros_like(t)
 
-    # Impulse Response
     try:
         _, y_i = signal.impulse(sys_tf, T=t)
         y_i = np.nan_to_num(y_i)
     except Exception:
         y_i = np.zeros_like(t)
 
-    # Bode Plot Magnitude
     try:
         _, mag, _ = signal.bode(sys_tf, w=w)
         mag = np.nan_to_num(mag)
     except Exception:
         mag = np.zeros_like(w)
 
-    # 3D s-Plane Surface Response
     sigmas = np.linspace(-6, 3, 60)
     omegas = np.linspace(-10, 10, 60)
     S = sigmas + 1j * omegas[:, None]
@@ -126,7 +115,6 @@ def analyze(cfg: SystemConfig):
         Mag = np.nan_to_num(Mag, nan=15.0, posinf=15.0, neginf=0.0)
         Mag = np.clip(Mag, 0, 15)
 
-    # Zero markers lifted onto the surface so they render above it
     interp = interpolate.RegularGridInterpolator(
         (omegas, sigmas), Mag, bounds_error=False, fill_value=0.0
     )

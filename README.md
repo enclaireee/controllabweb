@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Controllab
 
-## Getting Started
+Website Laboratorium Teknik Kendali, Departemen Teknik Elektro FTUI.
 
-First, run the development server:
+Satu aplikasi dengan tiga fungsi: halaman publik lab, simulator sistem kendali yang
+bisa dipakai siapa saja, dan sistem praktikum tempat praktikan mengumpulkan laporan
+dan asisten memberi nilai.
+
+## Halaman Publik
+
+Bisa dibuka tanpa akun.
+
+Landing page berisi profil singkat lab. Halaman about memuat penjelasan lab, daftar
+asisten beserta jabatannya, dan perusahaan tempat alumni bekerja.
+
+## Simulator
+
+Alat interaktif untuk melihat perilaku sistem kendali secara langsung. Grafik digambar
+dengan Plotly dan transfer function ditulis dengan KaTeX.
+
+**Pole-Zero** sudah jalan. Pengguna menggeser posisi pole dan zero di bidang-s lewat
+slider, lalu halaman menampilkan transfer function-nya beserta step response, impulse
+response, Bode magnitude, dan permukaan 3D magnitude `|H(s)|` di bidang-s dengan
+posisi zero ditandai di atasnya. Perhitungannya dikerjakan backend Python, bukan di
+browser.
+
+**PID Tuning** juga sudah jalan. Simulasi berjalan terus menerus terhadap plant orde
+satu dengan dead time, jadi pengaruh perubahan Kp, Ki, dan Kd langsung terlihat saat
+slider digeser. Semua perhitungan dikerjakan di browser, tanpa backend.
+
+**Step Response**, **Bode Plot**, dan **Root Locus** belum dibuat. Ketiganya sudah
+punya kartu di daftar simulator dengan label "Segera", tapi halamannya masih
+menampilkan daftar simulator lagi.
+
+## Praktikum
+
+Halaman untuk praktikan yang sudah masuk.
+
+Halaman utama berupa tabel semua modul praktikum. Tiap baris menunjukkan apakah
+pretest sudah ditandai selesai, apakah laporan sudah dikumpulkan, dan berapa rata-rata
+nilai sementara. Baris juga menandai modul yang mendekati atau melewati deadline.
+
+Tiap modul punya halamannya sendiri yang berisi materi PDF, checkbox untuk menandai
+pretest selesai, dan form pengumpulan laporan berupa tautan Google Drive. Mengirim
+ulang akan mengganti tautan sebelumnya. Kalau deadline modul sudah lewat dan laporan
+belum masuk, formnya tertutup.
+
+## Penilaian
+
+Halaman untuk asisten.
+
+Daftar modul yang sama, tapi membukanya menampilkan seluruh roster praktikan. Tiap
+praktikan punya tiga kolom nilai: pretest, tanya jawab, dan laporan. Nilai tersimpan
+otomatis begitu diisi dan rata-ratanya langsung ikut berubah. Tiap baris juga memuat
+tautan laporan praktikan tersebut supaya bisa dibuka sambil menilai.
+
+## Akun dan Akses
+
+Register meminta nama dan NPM. Semua akun baru otomatis menjadi praktikan. Role
+asisten hanya bisa diberikan langsung lewat database, tidak pernah dibaca dari form
+register, supaya tidak ada yang bisa mendaftar sebagai asisten lalu menilai dirinya
+sendiri. Ada juga alur lupa dan reset kata sandi lewat email.
+
+Pengunjung yang belum masuk lalu membuka halaman praktikum atau penilaian akan
+dialihkan ke halaman login, dan setelah masuk dikembalikan ke halaman yang tadi
+dituju. Asisten yang membuka halaman praktikan dipindahkan ke halaman penilaian, dan
+sebaliknya.
+
+Pengalihan ini sifatnya kenyamanan, bukan pengaman. Yang benar-benar menjaga data
+adalah row-level security di database, jadi praktikan yang melewati pengalihan tetap
+tidak mendapat baris apa pun.
+
+## Teknologi
+
+Next.js 16 dengan App Router dan React 19, Tailwind CSS v4, serta Supabase untuk
+autentikasi dan basis data. Plotly dan KaTeX untuk keluaran simulator. Analisis
+pole-zero ditangani service terpisah dengan FastAPI dan SciPy.
+
+## Menjalankan Secara Lokal
 
 ```bash
+git clone https://github.com/enclaireee/controllabweb.git
+cd controllabweb
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buat `.env.local` berisi URL dan anon key dari Supabase project, di Settings bagian
+API:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tanpa keduanya, halaman publik dan simulator tetap jalan, tapi praktikum dan penilaian
+akan balik ke halaman login.
 
-## Learn More
+Simulator pole-zero butuh backend Python yang jalan terpisah:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+python3 -m venv backend/venv
+backend/venv/bin/pip install fastapi uvicorn numpy scipy pydantic
+backend/venv/bin/uvicorn backend.main:app --reload --port 8000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Alamatnya masih hardcoded ke `localhost:8000`, jadi simulator ini belum jalan di versi
+deploy sampai backend-nya dihosting.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Kontribusi Tim
 
-## Deploy on Vercel
+**Altaf Farzana**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Mengerjakan branding dan sistem autentikasi, termasuk:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Landing page beserta hero section dan halaman publik lainnya
+- Halaman about: profil lab, daftar asisten beserta jabatan, dan perusahaan alumni
+- Navbar dan aset gambar untuk halaman publik
+- Halaman login dan register yang terhubung ke Supabase
+
+**Farid Akbar**
+
+Mengerjakan simulator, termasuk:
+
+- Simulator pole-zero, termasuk visualisasi 3D magnitude transfer function di bidang s
+- Simulator PID tuning dengan simulasi live terhadap plant orde satu
+- Backend FastAPI dan SciPy untuk perhitungan analisis pole-zero
+- Shared library simulator agar tema plot dan komponen UI-nya seragam
+
+**Muhammad Fatih Zamzami**
+
+Mengerjakan sistem praktikum, termasuk:
+
+- Halaman praktikan: tabel status modul, materi PDF, penanda pretest, dan form
+  pengumpulan laporan
+- Halaman asisten: roster praktikan dengan input nilai yang tersimpan otomatis
+- Skema database, row-level security, dan RPC di Supabase
+- Proteksi route dan pembagian akses praktikan dan asisten lewat `proxy.ts`
+- Komponen UI bersama seperti SiteHeader, form, dan tombol

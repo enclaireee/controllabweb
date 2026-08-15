@@ -13,8 +13,6 @@ export async function createClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          // ponytail: throws when called from a Server Component; safe to ignore
-          // because the proxy (middleware) refreshes the session on every request.
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options),

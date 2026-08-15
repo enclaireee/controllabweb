@@ -15,10 +15,6 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // ponytail: createServerClient throws on missing credentials, and this proxy
-  // matches every route — so an unset env var 500s the whole site, marketing
-  // pages and 404 included. Without Supabase nobody can be signed in anyway,
-  // so treat everyone as a guest: public pages serve, protected ones bounce.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) {

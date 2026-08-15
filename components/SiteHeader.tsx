@@ -22,13 +22,17 @@ export const NAV_ASISTEN: NavItem[] = [
   { href: "/asisten", label: "Penilaian" },
 ];
 
+const RUTE_AUTH = ["/login", "/register", "/lupa-sandi", "/reset-sandi"];
+
 export default function SiteHeader({
   variant = "marketing",
   nav: navProp,
+  identitas,
 }: {
   variant?: "marketing" | "app";
 
   nav?: NavItem[];
+  identitas?: { nama: string; npm: string };
 }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -71,6 +75,8 @@ export default function SiteHeader({
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
+  const diHalamanAuth = RUTE_AUTH.includes(pathname);
+
   return (
     <>
 
@@ -95,7 +101,7 @@ export default function SiteHeader({
         <div className="mx-auto flex h-full max-w-content items-center justify-between px-5 tablet:px-8">
           <Link
 
-            href={isApp ? (nav[0]?.href ?? "/") : "/"}
+            href="/"
             className="flex items-center gap-2 font-display text-base font-medium text-text"
           >
 
@@ -138,12 +144,25 @@ export default function SiteHeader({
 
           <div className="flex items-center gap-3">
 
+            {isApp && identitas?.nama && (
+              <span className="hidden font-mono text-meta text-text-muted tablet:inline">
+                {identitas.nama}
+                {identitas.npm && (
+                  <>
+                    <span aria-hidden="true" className="px-2 text-border-strong">
+                      /
+                    </span>
+                    <span data-numeric>{identitas.npm}</span>
+                  </>
+                )}
+              </span>
+            )}
             {isApp && (
               <span className="hidden tablet:inline">
                 <TombolKeluar />
               </span>
             )}
-            {!isApp && (
+            {!isApp && !diHalamanAuth && (
               <Link
                 href="/login"
                 className="hidden h-10 items-center rounded-button border border-border-strong px-5 text-sm font-medium text-text transition-colors duration-120 ease-signal hover:bg-surface-raised tablet:inline-flex"
@@ -227,9 +246,22 @@ export default function SiteHeader({
 
           {isApp ? (
             <div className="mt-auto">
+              {identitas?.nama && (
+                <p className="mb-5 font-mono text-meta text-text-muted">
+                  {identitas.nama}
+                  {identitas.npm && (
+                    <>
+                      <span aria-hidden="true" className="px-2 text-border-strong">
+                        /
+                      </span>
+                      <span data-numeric>{identitas.npm}</span>
+                    </>
+                  )}
+                </p>
+              )}
               <TombolKeluar />
             </div>
-          ) : (
+          ) : diHalamanAuth ? null : (
             <Link
               href="/login"
               onClick={closeMenu}
