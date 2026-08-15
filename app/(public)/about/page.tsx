@@ -8,42 +8,42 @@ const assistants = [
   {
     name: "Ignatius Cahyo",
     role: "Lab Coordinator",
-    image: "/assistants/ignatius.jpg",
+    image: "/images/aslab2.jpg",
   },
   {
     name: "Kevin Imanuel",
     role: "Reg Course Coor",
-    image: "/assistants/kevin.jpg",
+    image: "/images/aslab2.jpg",
   },
   {
     name: "Rafsya Ghaizan",
     role: "KKI Course Coor",
-    image: "/assistants/rafsya.jpg",
+    image: "/images/aslab2.jpg",
   },
   {
     name: "Haidar Al Ghifari",
     role: "Software Dev",
-    image: "/assistants/haidar.jpg",
+    image: "/images/aslab2.jpg",
   },
   {
     name: "Alif Iqbal",
     role: "Hardware Dev",
-    image: "/assistants/alif.jpg",
+    image: "/images/aslab2.jpg",
   },
   {
     name: "Keiko Aurelia",
     role: "Creative Media",
-    image: "/assistants/keiko.jpg",
+    image: "/images/aslab2.jpg",
   },
   {
     name: "Rafi Naryama",
     role: "Secretary and Inventory",
-    image: "/assistants/rafi.jpg",
+    image: "/images/aslab2.jpg",
   },
   {
     name: "Muhammad Rais",
     role: "Training and Development",
-    image: "/assistants/rais.jpg",
+    image: "/images/aslab2.jpg",
   },
 ];
 
