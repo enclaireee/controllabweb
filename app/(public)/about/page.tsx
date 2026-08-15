@@ -33,7 +33,7 @@ const assistants = [
   {
     name: "Keiko Aurelia",
     role: "Creative Media",
-    image:"/assistants/keiko.jpg",
+    image: "/assistants/keiko.jpg",
   },
   {
     name: "Rafi Naryama",
@@ -44,7 +44,7 @@ const assistants = [
     name: "Muhammad Rais",
     role: "Training and Development",
     image: "/assistants/rais.jpg",
-  }
+  },
 ];
 
 // Data Perusahaan Alumni
@@ -97,7 +97,7 @@ export default function AboutPage() {
           <div className="relative mx-auto w-full max-w-md lg:max-w-none">
             <div className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-card shadow-2xl md:aspect-square">
               <Image
-                src="/assistants-photo.jpg"
+                src="/images/assistants-photo.jpeg"
                 alt="Tim Laboratorium Kendali UI"
                 fill
                 className="object-cover"
@@ -105,7 +105,7 @@ export default function AboutPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                Laboratorium Sistem Kendali UI
+                Laboratorium Teknik Kendali UI
               </div>
             </div>
           </div>

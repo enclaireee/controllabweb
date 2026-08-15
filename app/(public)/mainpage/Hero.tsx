@@ -41,7 +41,7 @@ export default function Hero() {
           </p>
 
           <div className="pt-4 flex flex-wrap gap-4">
-            {/* Learn More ke /about */}
+            {/* PERBAIKAN 1: Arahkan Learn More ke /about (tempat modul berada) */}
             <Link
               href="/about"
               className="border border-border bg-surface/50 hover:border-accent text-text px-6 py-3 rounded-button font-medium text-sm transition-all flex items-center gap-2 group"
@@ -50,7 +50,7 @@ export default function Hero() {
               <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
             </Link>
 
-            {/* Contacts */}
+            {/* PERBAIKAN 2: Ubah href Contacts ke "#" agar tidak mengarah ke modul */}
             <Link
               href="#"
               className="border border-border bg-surface/50 hover:border-accent text-text px-6 py-3 rounded-button font-medium text-sm transition-all flex items-center gap-2 group"
@@ -70,7 +70,7 @@ export default function Hero() {
         >
           <div className="relative border border-border rounded-card overflow-hidden bg-surface shadow-2xl group">
             <img 
-              src="/images/assistants-photo.jpg" 
+              src="/images/assistants-photo.jpeg" 
               alt="Tim Asisten Laboratorium" 
               className="w-full h-[380px] object-cover group-hover:scale-105 transition-transform duration-500"
             />
@@ -91,39 +91,26 @@ export default function Hero() {
         transition={{ duration: 0.6, delay: 0.4 }}
         className="relative z-10 max-w-(--container-content) mx-auto w-full pt-8 border-t border-border grid grid-cols-1 md:grid-cols-3 gap-6"
       >
-        {/* 1. We're Recruiting New Assistants */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <span className="text-meta text-accent font-mono">NEWS RELEASE</span>
             <span className="text-meta text-text-muted">06/26/2026</span>
           </div>
-          <a
-            href="https://www.instagram.com/imeftui/p/DacYhyyjLKx/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-sm font-semibold text-text hover:text-highlight transition-colors"
-          >
-            We're Recruiting New Assistants! &rarr;
-          </a>
+          <p className="text-sm font-semibold text-text hover:text-highlight cursor-pointer transition-colors">
+            We're Recruiting New Assistants!
+          </p>
         </div>
 
-        {/* 2. Open House & Lab Tour 2026 */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <span className="text-meta text-accent font-mono">EVENT RELEASE</span>
             <span className="text-meta text-text-muted">05/23/2026</span>
           </div>
-          <a
-            href="https://www.instagram.com/imeftui/p/DYbqfpcEU20/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-sm font-semibold text-text hover:text-highlight transition-colors"
-          >
-            Open House & Lab Tour 2026 &rarr;
-          </a>
+          <p className="text-sm font-semibold text-text hover:text-highlight cursor-pointer transition-colors">
+            Open House & Lab Tour 2026
+          </p>
         </div>
 
-        {/* 3. Modul Baru */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <span className="text-meta text-accent font-mono">NEWS RELEASE</span>
