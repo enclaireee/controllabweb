@@ -5,12 +5,8 @@ import { buttonClass } from "@/components/Button";
 import CekPretest from "@/components/CekPretest";
 import FormLaporan from "@/components/FormLaporan";
 import PdfPane from "@/components/PdfPane";
-import {
-  ambilModul,
-  formatTanggal,
-  rataRata,
-  sisaHari,
-} from "@/lib/praktikum";
+import { formatTanggal, rataRata, sisaHari } from "@/lib/praktikum";
+import { ambilModul } from "@/lib/praktikum.queries";
 
 type Props = { params: Promise<{ slug: string }> };
 

@@ -1,9 +1,5 @@
 import type { TextareaHTMLAttributes } from "react";
 
-/**
- * design.md §7 — same rules as Input: --border-strong (never --border, which is
- * 1.36 and fails WCAG 1.4.11), and a required visible label.
- */
 type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id"> & {
   id: string;
   label: string;

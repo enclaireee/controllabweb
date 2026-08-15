@@ -44,3 +44,5 @@ next-env.d.ts
 # They are byte-identical junk; never commit them.
 *\ 2.*
 *\ [0-9].*
+
+*.md

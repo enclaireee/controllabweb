@@ -1,21 +1,11 @@
 import type { InputHTMLAttributes } from "react";
 
-/**
- * design.md §7 — 40px, radius-button, text-sm.
- *
- * Border is --border-strong, never --border: WCAG 1.4.11 needs 3:1 for an
- * interactive boundary and --border measures 1.36 (design.md §2, rule 3).
- *
- * `label` is required, not optional. §7: "Every input has a visible <label>.
- * Placeholder is never the label." Making it required is how that stops being
- * a guideline and starts being enforced.
- */
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
   id: string;
   label: string;
-  /** Rendered below in --danger, and wires up aria-invalid + aria-describedby. */
+
   error?: string;
-  /** Quiet hint below the field. Suppressed while an error is showing. */
+
   hint?: string;
 };
 

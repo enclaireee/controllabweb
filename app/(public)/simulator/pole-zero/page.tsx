@@ -7,23 +7,8 @@ import 'katex/dist/katex.min.css';
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
-/**
- * Plotly paints to canvas/SVG and cannot read CSS custom properties, so the
- * theme has to be handed to it as resolved colour strings. design.md §2 — no
- * hex literals live in this file.
- *
- * Reading the custom property directly is not enough: `--border` is a
- * color-mix(), and a custom property's computed value keeps that function
- * unevaluated, so Plotly would receive the literal text "color-mix(...)" and
- * drop the colour. Assigning it to a real `color` property on a throwaway
- * element makes the browser evaluate it down to an rgb()/rgba() string.
- *
- * ponytail: cached per token, so a future theme toggle must clear `cache`.
- * There is no toggle today (design.md §2 — dark is the only rendered mode).
- */
 const cache = new Map<string, string>();
 
-/** Response shape of POST /api/analyze. Mirrors backend/main.py — read only. */
 type Analysis = {
     tf_latex: string;
     step: { t: number[]; y: number[] };
@@ -34,7 +19,7 @@ type Analysis = {
 };
 
 const token = (name: string): string => {
-    // <Plot> is ssr:false, so the empty server value is never painted.
+
     if (typeof window === 'undefined') return '';
     const hit = cache.get(name);
     if (hit) return hit;
@@ -74,7 +59,6 @@ export default function PoleZeroSimulator() {
         return () => clearTimeout(h);
     }, [numPoles, numZeros, pRe, pIm, zRe, zIm]);
 
-    // design.md §8 — an error says what happened and what to do.
     if (gagal && !data) return (
         <div className="mx-auto max-w-prose px-5 py-20">
             <h1 className="font-display text-lg text-text">Server simulasi tidak merespons</h1>
@@ -104,7 +88,6 @@ export default function PoleZeroSimulator() {
         setArr(next);
     };
 
-    // §5 — the axis furniture is chrome, the trace is the signal.
     const plotChrome = {
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
@@ -116,8 +99,7 @@ export default function PoleZeroSimulator() {
     const render2D = (x: number[], y: number[], title: string, xL: string, yL: string, logX = false) => (
         <div className="rounded-card border border-border bg-surface p-5">
             <Plot
-                // §2 — one accent. Separate charts with their own titles do not need
-                // different hues to be told apart; that is a novice tell.
+
                 data={[{ x, y, type: 'scatter', mode: 'lines', line: { color: token('--accent'), width: 2 } }]}
                 layout={{
                     ...plotChrome,
@@ -165,8 +147,6 @@ export default function PoleZeroSimulator() {
                 </label>
             </div>
 
-            {/* tablet:, not md: — --breakpoint-*: initial removed Tailwind's defaults,
-                so md: compiled to nothing and this grid never split into columns. */}
             <div className="grid grid-cols-1 gap-8 tablet:grid-cols-2">
                 <div className="space-y-3">
                     <h2 className="font-mono text-meta uppercase tracking-wide text-text-muted">Poles</h2>
@@ -267,8 +247,7 @@ export default function PoleZeroSimulator() {
                             {
                                 x: data.surface.sigma, y: data.surface.omega, z: data.surface.z,
                                 type: 'surface',
-                                // Viridis is a rainbow. This ramp is navy → maroon → gold:
-                                // on-palette, and monotonic in lightness so magnitude still reads.
+
                                 colorscale: [
                                     [0, token('--bg')],
                                     [0.5, token('--accent-deep')],
@@ -283,7 +262,7 @@ export default function PoleZeroSimulator() {
                             {
                                 x: data.zeros.x, y: data.zeros.y, z: data.zeros.z,
                                 type: 'scatter3d', mode: 'markers', name: 'Zeros (o)',
-                                // §2 — gold is the annotation hue. Markers annotate the surface.
+
                                 marker: { size: 6, color: token('--highlight'), symbol: 'circle' }
                             }
                         ]}

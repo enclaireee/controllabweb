@@ -33,8 +33,7 @@ export default function Section1({ next = "/praktikum" }: { next?: string }) {
       setLoading(false);
     } else {
       router.push(next);
-      // Re-runs the Server Components with the new session cookie; without it
-      // they render with the old, empty one.
+
       router.refresh();
     }
   };

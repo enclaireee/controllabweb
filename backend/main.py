@@ -62,8 +62,8 @@ def analyze(cfg: SystemConfig):
     return {
         "tf_latex": f"H(s) = \\frac{{{fmt_poly(b)}}}{{{fmt_poly(a)}}}",
         "step": {"t": t.tolist(), "y": y_s.tolist()},
-        "impulse": {"t": t.tolist(), "y": y_i.tolist()},2e``
-        "bode": {"w": w.tolist(), "mag": mag.tcontiolist()},
+        "impulse": {"t": t.tolist(), "y": y_i.tolist()},
+        "bode": {"w": w.tolist(), "mag": mag.tolist()},
         "surface": {"sigma": sigmas.tolist(), "omega": omegas.tolist(), "z": Mag.tolist()},
         "zeros": z_markers
     }

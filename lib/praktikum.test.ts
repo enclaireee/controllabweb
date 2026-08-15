@@ -1,9 +1,3 @@
-// Run: npm test   (Node strips the types natively — no framework)
-//
-// Covers the two pieces of logic that fail silently: the average shown to a
-// praktikan, and the score validation that has to agree with the database
-// CHECK constraint.
-
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -33,7 +27,7 @@ test("rataRata is the plain mean of all three", () => {
 });
 
 test("rataRata rounds to 2 decimals rather than trailing float noise", () => {
-  // 80+85+91 = 256 / 3 = 85.333...
+
   assert.equal(
     rataRata(nilai({ nilaiPretest: 80, nilaiQna: 85, nilaiLaprak: 91 })),
     85.33,

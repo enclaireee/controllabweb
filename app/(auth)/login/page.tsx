@@ -8,7 +8,7 @@ export default async function Page({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  // Only same-origin paths. An open redirect here would be a phishing vector.
+
   const tujuan = next?.startsWith("/") && !next.startsWith("//") ? next : "/praktikum";
   return <Section1 next={tujuan} />;
 }

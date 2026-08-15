@@ -7,13 +7,6 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { createClient } from "@/lib/supabase/client";
 
-/**
- * Sends Supabase's password-reset email, which links back to /reset-sandi.
- *
- * Always reports success, even for an address that has no account. Saying
- * "email tidak terdaftar" would turn this form into a way to enumerate who has
- * an account here.
- */
 export default function FormLupaSandi() {
   const [email, setEmail] = useState("");
   const [kirim, setKirim] = useState(false);
