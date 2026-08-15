@@ -5,10 +5,11 @@ import dynamic from 'next/dynamic';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
+import { token, plotChrome, kartu, kontrol, slider, selectCls } from '../_lib/ui';
+
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
-const cache = new Map<string, string>();
-
+/** Response shape of POST /api/analyze. Mirrors backend/main.py — read only. */
 type Analysis = {
     tf_latex: string;
     step: { t: number[]; y: number[] };
@@ -16,21 +17,6 @@ type Analysis = {
     bode: { w: number[]; mag: number[] };
     surface: { sigma: number[]; omega: number[]; z: number[][] };
     zeros: { x: number[]; y: number[]; z: number[] };
-};
-
-const token = (name: string): string => {
-
-    if (typeof window === 'undefined') return '';
-    const hit = cache.get(name);
-    if (hit) return hit;
-    const probe = document.createElement('span');
-    probe.style.color = `var(${name})`;
-    probe.style.display = 'none';
-    document.body.appendChild(probe);
-    const value = getComputedStyle(probe).color;
-    probe.remove();
-    if (value) cache.set(name, value);
-    return value;
 };
 
 export default function PoleZeroSimulator() {
@@ -88,13 +74,7 @@ export default function PoleZeroSimulator() {
         setArr(next);
     };
 
-    const plotChrome = {
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: token('--text-muted'), size: 13 },
-        xaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
-        yaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
-    };
+    const chrome = plotChrome();
 
     const render2D = (x: number[], y: number[], title: string, xL: string, yL: string, logX = false) => (
         <div className="rounded-card border border-border bg-surface p-5">
@@ -102,10 +82,10 @@ export default function PoleZeroSimulator() {
 
                 data={[{ x, y, type: 'scatter', mode: 'lines', line: { color: token('--accent'), width: 2 } }]}
                 layout={{
-                    ...plotChrome,
+                    ...chrome,
                     title: { text: title, font: { color: token('--text'), size: 15 } },
-                    xaxis: { ...plotChrome.xaxis, title: { text: xL }, type: logX ? 'log' : 'linear' },
-                    yaxis: { ...plotChrome.yaxis, title: { text: yL } },
+                    xaxis: { ...chrome.xaxis, title: { text: xL }, type: logX ? 'log' : 'linear' },
+                    yaxis: { ...chrome.yaxis, title: { text: yL } },
                     margin: { l: 50, r: 20, t: 35, b: 40 },
                     autosize: true,
                 }}
@@ -113,11 +93,6 @@ export default function PoleZeroSimulator() {
             />
         </div>
     );
-
-    const kartu = 'rounded-card border border-border bg-surface p-5';
-    const kontrol = 'rounded-button border border-border bg-bg p-3 text-meta text-text-body';
-    const slider = 'mt-2 w-full accent-accent';
-    const selectCls = 'h-10 rounded-button border border-border-strong bg-surface px-3 text-sm text-text';
 
     return (
         <div className="mx-auto max-w-content space-y-8 px-5 py-20 tablet:px-8">
