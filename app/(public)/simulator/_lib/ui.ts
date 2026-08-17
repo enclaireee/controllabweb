@@ -18,10 +18,10 @@ export const token = (name: string): string => {
 
 export const plotChrome = () => ({
     paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: token('--text-muted'), size: 13 },
-    xaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
-    yaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
+                                 plot_bgcolor: 'rgba(0,0,0,0)',
+                                 font: { color: token('--text-muted'), size: 13 },
+                                 xaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
+                                 yaxis: { gridcolor: token('--border'), zerolinecolor: token('--border') },
 });
 
 export const kartu = 'rounded-card border border-border bg-surface p-5';
